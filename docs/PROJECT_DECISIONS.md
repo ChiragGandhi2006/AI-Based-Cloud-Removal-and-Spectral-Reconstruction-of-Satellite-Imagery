@@ -11,7 +11,7 @@
 | Output | Multispectral Sentinel-2 | Recommended |
 | Cloud detector | Existing mask initially | Recommended |
 | Indices | NDVI + NDWI for analysis | Recommended |
-| Frontend | React + FastAPI | Recommended |
+| Frontend | Streamlit | Recommended |
 | Metrics | PSNR, SSIM, RMSE, SAM | Recommended |
 | Advanced uncertainty | Phase 2 | Optional |
 
@@ -23,4 +23,4 @@
 - batch size
 - geographic split strategy based on available metadata
 - exact cloud-mask source available in the downloaded dataset
-- frontend/deployment priority
+- app/deployment priority

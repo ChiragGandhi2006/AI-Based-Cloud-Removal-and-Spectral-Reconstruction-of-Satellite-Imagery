@@ -63,8 +63,8 @@
 
 ## Phase 7 — Application
 
-- [ ] FastAPI inference service
-- [ ] React interface
+- [ ] Streamlit inference service
+- [ ] Streamlit interface
 - [ ] Result visualization
 - [ ] Metrics display
 - [ ] Export reconstructed result

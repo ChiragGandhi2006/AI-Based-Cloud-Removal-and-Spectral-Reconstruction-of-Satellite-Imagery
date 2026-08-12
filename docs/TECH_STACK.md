@@ -1,58 +1,80 @@
 # Technical Stack
 
-## Core
+## Core Programming
 
 - Python
-- PyTorch
-- NumPy
-- Pandas
 
-## Geospatial
+## Deep Learning
+
+- PyTorch
+
+## Geospatial Processing
 
 - Rasterio
 - GDAL
 - GeoPandas where required
 - Shapely where required
 
-## Computer Vision
+## Image Processing
 
 - OpenCV
-- PyTorch/Torchvision utilities where useful
+
+## Numerical/Data Processing
+
+- NumPy
+- Pandas
 
 ## Visualization
 
 - Matplotlib
 - Plotly
 
-## Backend
+## User Interface
 
-- FastAPI
-- Uvicorn
-
-## Frontend
-
-- React
-- Tailwind CSS
-- MapLibre/Leaflet if interactive geospatial maps are required
+- Streamlit
 
 ## Experimentation
 
-- Jupyter
-- MLflow or Weights & Biases
+- Jupyter Notebook
+- MLflow or Weights & Biases, if required
 
-## Engineering
+## Testing
+
+- pytest
+
+## Version Control
 
 - Git
 - GitHub
+
+## Architecture Principle
+
+The project uses a Python-first architecture:
+
+```text
+Satellite Data
+      ↓
+Preprocessing
+      ↓
+Feature Engineering
+      ↓
+PyTorch Model
+      ↓
+Inference
+      ↓
+Evaluation
+      ↓
+Streamlit Interface
+```
+
+## Technologies Not Required
+
+The project does not require:
+
+- React
+- FastAPI
 - Docker
-- pytest
-
-## AI Stack Note
-
-The core system does **not** require:
-
+- Kubernetes
 - LLMs
 - LangChain
 - LangGraph
-
-Those technologies solve different problems and are unnecessary for the core satellite reconstruction pipeline.

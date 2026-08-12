@@ -29,37 +29,41 @@
                   └─────────┬─────────┘
                             ▼
                   ┌───────────────────┐
-                  │ FastAPI Backend    │
-                  └─────────┬─────────┘
-                            ▼
-                  ┌───────────────────┐
-                  │ React Frontend    │
+                  │ Streamlit App      │
                   └───────────────────┘
 ```
 
-## Backend Responsibilities
+## Application Responsibilities
 
-- upload/receive imagery
-- validate input
-- preprocess
-- run inference
-- calculate metrics
-- return result metadata
-- expose reconstructed imagery
+The Streamlit application handles:
 
-## Frontend Responsibilities
+- selecting/uploading input data
+- running preprocessing
+- loading the trained model
+- running inference
+- displaying reconstructed imagery
+- calculating/displaying metrics
+- displaying spectral plots
+- displaying NDVI/NDWI comparisons
+- displaying experiment results
 
-- upload image
-- show processing state
-- display cloudy input
-- display reconstruction
-- display target when available
-- show metrics
-- show spectral plots
-- show index comparison
+## Python Module Flow
 
-## Deployment
+```text
+app/streamlit_app.py
+        │
+        ├── src/inference/
+        │       └── predict.py
+        │
+        ├── src/preprocessing/
+        │
+        ├── src/models/
+        │
+        └── src/evaluation/
+```
 
-First run locally.
+## Deployment Scope
 
-Only deploy to a cloud GPU/server after the pipeline is stable.
+For the semester project, the application will initially be run locally using Streamlit.
+
+No Docker, Kubernetes, or separate backend/frontend deployment is required.

@@ -37,8 +37,17 @@ Web Application
 - Attention U-Net as the baseline architecture
 - NDVI and NDWI for validation/analysis
 - PSNR, SSIM, RMSE and SAM for evaluation
-- React + FastAPI interface after the model pipeline is stable
+- Streamlit interface after the model pipeline is stable
 
 ## Important Scope Rule
 
 Do not start with diffusion models, temporal modeling, a custom cloud detector, or uncertainty estimation. These are optional Phase-2 extensions after the baseline works.
+
+
+## Run the Interface
+
+After the model and inference pipeline are ready:
+
+```bash
+streamlit run app/streamlit_app.py
+```
