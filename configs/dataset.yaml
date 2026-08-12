@@ -1,0 +1,8 @@
+name: SEN12MS-CR
+description: SEN12MS-CR dataset configuration
+train_path: data/processed/train
+val_path: data/processed/val
+test_path: data/processed/test
+patch_size: 256
+stride: 256
+cloud_threshold: 0.1

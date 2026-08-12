@@ -1,0 +1,5 @@
+name: attention_unet
+arch: attention_unet
+encoder: resnet34
+decoder_channels: [256, 128, 64, 32, 16]
+attention_type: hard
