@@ -1,1 +1,1 @@
-from .metrics import PSNR, SSIM, RMSE, SAM, NDVI, NDWI, ErrorMaps
+from .psnr import PSNR, SSIM, RMSE, SAM, NDVI, NDWI, error_maps

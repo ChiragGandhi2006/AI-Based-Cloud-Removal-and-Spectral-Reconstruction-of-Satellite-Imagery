@@ -16,7 +16,7 @@ class L1Loss(nn.Module):
 
 
 class SSIMLoss(nn.Module):
-    """Structural Similarity Index Loss."""
+    """Structural Similarity Index Loss (per-band)."""
     
     def __init__(self, window_size=11, reduction='mean'):
         super(SSIMLoss, self).__init__()
@@ -25,18 +25,23 @@ class SSIMLoss(nn.Module):
         self.register_buffer('window', torch.ones(1, 1, window_size, window_size) / (window_size ** 2))
     
     def forward(self, prediction, target):
-        # Compute SSIM
+        # Compute SSIM per band
         prediction = prediction.float()
         target = target.float()
         
+        B, C, H, W = prediction.shape
+        pred = prediction.reshape(B * C, 1, H, W)
+        tgt = target.reshape(B * C, 1, H, W)
+        pad = self.window_size // 2
+        
         # Mean calculation
-        mean_pred = F.conv2d(prediction, self.window, padding=self.window_size // 2, groups=1)
-        mean_target = F.conv2d(target, self.window, padding=self.window_size // 2, groups=1)
+        mean_pred = F.conv2d(pred, self.window, padding=pad)
+        mean_target = F.conv2d(tgt, self.window, padding=pad)
         
         # Variance and covariance
-        var_pred = F.conv2d(prediction ** 2, self.window, padding=self.window_size // 2, groups=1) - mean_pred ** 2
-        var_target = F.conv2d(target ** 2, self.window, padding=self.window_size // 2, groups=1) - mean_target ** 2
-        cov_pred_target = F.conv2d(prediction * target, self.window, padding=self.window_size // 2, groups=1) - mean_pred * mean_target
+        var_pred = F.conv2d(pred ** 2, self.window, padding=pad) - mean_pred ** 2
+        var_target = F.conv2d(tgt ** 2, self.window, padding=pad) - mean_target ** 2
+        cov_pred_target = F.conv2d(pred * tgt, self.window, padding=pad) - mean_pred * mean_target
         
         # SSIM formula
         k1, k2 = 0.01, 0.03
@@ -47,7 +52,9 @@ class SSIMLoss(nn.Module):
         ssim_map = ((2 * mean_pred * mean_target + C1) * (2 * cov_pred_target + C2)) / \
                    ((mean_pred ** 2 + mean_target ** 2 + C1) * (var_pred + var_target + C2))
         
-        return 1 - ssim_map.mean() if self.reduction == 'mean' else 1 - ssim_map
+        if self.reduction == 'mean':
+            return 1 - ssim_map.mean()
+        return (1 - ssim_map).reshape(B, C, H, W)
 
 
 class SpectralAngleLoss(nn.Module):
@@ -93,11 +100,16 @@ class CombinedLoss(nn.Module):
         self.mask_weight = mask_weight
     
     def forward(self, prediction, target, mask=None):
-        # L1 loss (optionally mask-aware)
+        # L1 loss (optionally mask-aware: up-weight cloudy regions)
         l1_loss = self.l1(prediction, target)
         if mask is not None:
-            l1_loss = l1_loss * mask.squeeze().mean() + l1_loss * (1 - mask.squeeze()).mean() * self.mask_weight
-            l1_loss = l1_loss.mean()
+            m = mask.squeeze(1) if mask.dim() == 4 else mask  # (B, H, W)
+            if m.dim() == 3 and m.shape[0] == prediction.shape[0]:
+                per_pixel = l1_loss.mean(dim=1)  # (B, H, W)
+                weight = 1.0 + (self.mask_weight - 1.0) * m
+                l1_loss = (per_pixel * weight).mean()
+            else:
+                l1_loss = l1_loss.mean()
         else:
             l1_loss = l1_loss.mean()
         

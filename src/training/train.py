@@ -5,6 +5,8 @@ from tqdm import tqdm
 import os
 import yaml
 
+from src.losses import CombinedLoss
+
 
 def train_one_epoch(model, dataloader, optimizer, loss_fn, device, scaler=None):
     """Train for one epoch."""
@@ -100,7 +102,7 @@ def run_training(model, train_loader, val_loader, config, device):
     
     optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = ReduceLROnPlateau(optimizer, patience=10, min_lr=1e-6)
-    scaler = GradScaler() if config.get("mixed_precision", True) else None
+    scaler = GradScaler() if (config.get("mixed_precision", True) and torch.cuda.is_available()) else None
     loss_fn = CombinedLoss(
         lambda_l1=config.get("lambda_l1", 1.0),
         lambda_ssim=config.get("lambda_ssim", 0.5),

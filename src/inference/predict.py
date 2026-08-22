@@ -4,20 +4,26 @@ from pathlib import Path
 
 
 def load_model(checkpoint_path, device, model_name="attention_unet", **model_kwargs):
-    """Load model from checkpoint."""
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    from src.models.attention_unet import AttentionUNet
-    
-    model = AttentionUNet(**model_kwargs)
+    """Load model from checkpoint, rebuilding architecture from saved config."""
+    checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
+    from src.models import build_model
+
+    config = dict(checkpoint.get("model_config") or {})
+    config.setdefault("name", model_name)
+    for key, value in model_kwargs.items():
+        config[key] = value
+    name = config.pop("name")
+
+    model = build_model(name, **config)
     model.load_state_dict(checkpoint["model_state_dict"])
     model = model.to(device)
     model.eval()
-    
+
     return model, checkpoint
 
 
 def predict_from_checkpoint(cloudy_s2, sar, mask, checkpoint_path, device=None, 
-                            mean=None, std=None):
+                            mean=None, std=None, **model_kwargs):
     """
     Run inference on cloudy Sentinel-2 data.
     
@@ -41,28 +47,29 @@ def predict_from_checkpoint(cloudy_s2, sar, mask, checkpoint_path, device=None,
     # Preprocess input
     if mean is not None and std is not None:
         cloudy_s2 = (cloudy_s2 - mean) / std
-    
-    # Ensure proper shape
+
+    # Ensure proper shapes and convert to tensors
+    cloudy_s2 = torch.as_tensor(cloudy_s2, dtype=torch.float32)
+    sar = torch.as_tensor(sar, dtype=torch.float32) if sar is not None else None
+    mask = torch.as_tensor(mask, dtype=torch.float32) if mask is not None else None
+
     if cloudy_s2.ndim == 3:
         cloudy_s2 = cloudy_s2.unsqueeze(0)  # Add batch dimension
-    if sar.ndim == 3:
+    if sar is not None and sar.ndim == 3:
         sar = sar.unsqueeze(0)
-    if mask.ndim == 2:
+    if mask is not None and mask.ndim == 2:
         mask = mask.unsqueeze(0).unsqueeze(0)  # (1, 1, H, W)
-    elif mask.ndim == 3:
+    elif mask is not None and mask.ndim == 3:
         mask = mask.unsqueeze(0)
-    
+
     # Move to device
     cloudy_s2 = cloudy_s2.to(device)
-    sar = sar.to(device)
-    mask = mask.to(device)
+    sar = sar.to(device) if sar is not None else None
+    mask = mask.to(device) if mask is not None else None
     
     # Inference
     with torch.no_grad():
-        if hasattr(model, 'forward_with_sar') and sar.shape[1] > 0:
-            prediction = model(cloudy_s2, sar, mask)
-        else:
-            prediction = model(cloudy_s2)
+        prediction = model(cloudy_s2, sar, mask)
     
     # Denormalize if mean/std provided
     if mean is not None and std is not None:

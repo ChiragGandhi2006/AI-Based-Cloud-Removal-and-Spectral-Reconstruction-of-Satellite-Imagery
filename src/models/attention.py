@@ -67,7 +67,13 @@ class AttentionUNetFull(nn.Module):
             nn.ReLU(inplace=True)
         )
     
-    def forward(self, x):
+    def forward(self, x, sar=None, mask=None):
+        # Concatenate auxiliary inputs if used
+        if sar is not None and self.use_sar:
+            x = torch.cat([x, sar], dim=1)
+        if mask is not None and self.use_mask:
+            x = torch.cat([x, mask], dim=1)
+
         # Initial processing
         x = self.init_conv(x)
         x = self.init_bn(x)

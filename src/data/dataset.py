@@ -1,3 +1,5 @@
+import os
+
 import torch
 from torch.utils.data import Dataset
 import numpy as np
@@ -11,9 +13,10 @@ class SEN12MSCRDataset(Dataset):
         self.samples = self._load_samples()
 
     def _load_samples(self):
-        processed_dir = f"{self.root_dir}/processed/{self.split}"
+        processed_dir = os.path.join(self.root_dir, "data", "processed", self.split)
+        if not os.path.isdir(processed_dir):
+            processed_dir = os.path.join(self.root_dir, "processed", self.split)
         samples = []
-        import os
         for scene_dir in sorted(os.listdir(processed_dir)):
             scene_path = os.path.join(processed_dir, scene_dir)
             if os.path.isdir(scene_path):
@@ -26,8 +29,6 @@ class SEN12MSCRDataset(Dataset):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        import numpy as np
-        import os
         path = self.samples[idx]
         data = np.load(path)
         cloudy = data["cloudy"]

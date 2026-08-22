@@ -1,6 +1,9 @@
+import os
 import torch
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
+
+from src.training.train import train_one_epoch, validate
 
 
 class Trainer:
@@ -24,13 +27,16 @@ class Trainer:
         )
         
         from src.losses.combined_loss import CombinedLoss
-        from src.training.train import train_one_epoch, validate
-        
+
+        loss_cfg = config.get("loss", {})
+        if not isinstance(loss_cfg, dict):
+            loss_cfg = {}
+
         self.loss_fn = CombinedLoss(
-            lambda_l1=config.get("loss", {}).get("lambda_l1", 1.0),
-            lambda_ssim=config.get("loss", {}).get("lambda_ssim", 0.5),
-            lambda_sam=config.get("loss", {}).get("lambda_sam", 0.3),
-            mask_weight=config.get("loss", {}).get("mask_weight", 2.0)
+            lambda_l1=loss_cfg.get("lambda_l1", 1.0),
+            lambda_ssim=loss_cfg.get("lambda_ssim", 0.5),
+            lambda_sam=loss_cfg.get("lambda_sam", 0.3),
+            mask_weight=loss_cfg.get("mask_weight", 2.0)
         )
         
     def fit(self, epochs=None):
@@ -43,10 +49,11 @@ class Trainer:
         optimizer = AdamW(self.model.parameters(), 
                          lr=self.config.get("learning_rate", 0.001),
                          weight_decay=self.config.get("weight_decay", 1e-4))
+        self.optimizer = optimizer
         scheduler = ReduceLROnPlateau(optimizer, 
                                      patience=self.config.get("patience", 10),
                                      min_lr=self.config.get("min_lr", 1e-6))
-        scaler = GradScaler() if self.config.get("mixed_precision", True) else None
+        scaler = GradScaler() if (self.config.get("mixed_precision", True) and torch.cuda.is_available()) else None
         
         best_val_loss = float("inf")
         
@@ -78,8 +85,9 @@ class Trainer:
         torch.save({
             "epoch": epoch,
             "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
             "val_loss": val_loss,
             "metrics": metrics,
+            "model_config": getattr(self.model, "model_config", None),
         }, ckpt_path)
         print(f"Checkpoint saved to {ckpt_path}")

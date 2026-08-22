@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from .encoders import Encoder, FeatureFusion, Decoder
+
 
 class AttentionUNetFusion(nn.Module):
     """Attention U-Net with explicit optical-SAR fusion."""

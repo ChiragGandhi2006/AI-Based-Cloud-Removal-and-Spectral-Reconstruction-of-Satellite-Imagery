@@ -42,7 +42,7 @@ class UNet(nn.Module):
         # Final output
         self.final = nn.Conv2d(base_filters, out_channels, 1)
         
-    def forward(self, x):
+    def forward(self, x, sar=None, mask=None):
         e1 = self.enc1(x)
         e2 = self.enc2(self.pool(e1))
         e3 = self.enc3(self.pool(e2))
