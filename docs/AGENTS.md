@@ -1,1201 +1,1145 @@
-# AGENTS.md
+Table of Contents
 
-> Project: AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery Version: 1.0 Architecture: Multi-Agent Geospatial AI Pipeline (ISRO Inspired)
+Introduction
 
-# Table of Contents
+Why Multi-Agent Architecture?
+
+Complete Agent Workflow
+
+Agent Communication
+
+Agent Responsibilities
+
+Data Retrieval Agent
+
+Preprocessing Agent
+
+Cloud & Shadow Detection Agent
+
+Change Detection Agent
+
+Adaptive Decision Agent
+
+Cross-Attention Fusion Agent
+
+Multi-Hypothesis Reconstruction Agent
+
+Quality Assessment Network Agent
+
+Confidence Estimation Agent
+
+Delivery & Visualization Agent
+
+Agent Memory & Data Exchange
+
+Error Recovery Strategy
+
+Future LangGraph Integration
 
 1. Introduction
 
+CloudClear AI is built using a Multi-Agent Artificial Intelligence Architecture, where each processing stage is represented by an autonomous intelligent agent.
+
+Instead of one large pipeline, specialized agents perform independent tasks such as:
+
+Data retrieval
+
+Image preprocessing
+
+Cloud detection
+
+Change analysis
+
+Multi-modal fusion
+
+Reconstruction
+
+Quality validation
+
+Confidence estimation
+
+Output generation
+
+This modular design improves scalability, maintainability, and explainability.
+
 2. Why Multi-Agent Architecture?
 
-3. Complete Agent Pipeline
+Traditional deep learning pipelines combine every operation into a single workflow, making debugging and upgrades difficult.
 
-4. Agent Communication Flow
+Our system separates intelligence into dedicated agents.
 
-5. Agent Responsibilities
+Benefits
 
-6. Agent 1 – Data Retrieval Agent
-
-7. Agent 2 – Preprocessing Agent
-
-8. Agent 3 – Cloud & Shadow Detection Agent
-
-9. Agent 4 – Change Detection Agent
-
-10. Agent 5 – Adaptive Decision Agent
-
-11. Agent 6 – Cross-Attention Fusion Agent
-
-12. Agent 7 – Multi-Hypothesis Reconstruction Agent
-
-13. Agent 8 – Quality Assessment Network Agent
-
-14. Agent 9 – Confidence Estimation Agent
-
-15. Agent 10 – Delivery & Integration Agent
-
-16. Agent Memory & Data Exchange
-
-17. Error Handling
-
-18. Future Agent Enhancements
-
-# 1. Introduction
-
-This project follows a Multi-Agent Artificial Intelligence Architecture instead of a single monolithic pipeline.
-
-Each stage of satellite image reconstruction is handled by an independent intelligent software agent. Every agent performs a specialized task and passes structured outputs to the next agent.
-
-The architecture is inspired by modern geospatial AI systems used in remote sensing applications.
-
-### Overall Goal
-
-Convert a cloud-covered LISS-IV satellite image into an analysis-ready cloud-free GeoTIFF while preserving spectral consistency and temporal accuracy.
-
-# 2. Why Multi-Agent Architecture?
-
-Traditional ML pipelines perform every task inside one script. That approach becomes difficult to maintain, scale, and debug.
-
-Our architecture separates responsibilities into intelligent agents.
-
-## Advantages
-
-|
 Feature
 
-|
+	
 
-Benefit
+Advantage
 
-|
-| --- | --- |
-|
+
+
 
 Modular
 
-|
+	
 
-Easy maintenance
+Independent development
 
-|
-|
+
+
 
 Scalable
 
-|
+	
 
-Independent upgrades
+Easy to extend
 
-|
-|
+
+
 
 Explainable
 
-|
+	
 
-Every decision is traceable
+Each decision is traceable
 
-|
-|
 
-Parallel
 
-|
 
-Multiple agents can run simultaneously
+Fault Tolerant
 
-|
-|
+	
+
+Failure isolation
+
+
+
 
 Reusable
 
-|
+	
 
-Individual agents can be reused
+Agents can be reused
 
-|
 
-# 3. Complete Agent Pipeline
 
-```
-Cloudy LISS-IV Image
-        │
-        ▼
-Data Retrieval Agent
-        │
-        ▼
-Preprocessing Agent
-        │
-        ▼
-Cloud Detection Agent
-        │
-        ▼
-Change Detection Agent
-        │
-        ▼
-Adaptive Decision Agent
-        │
-        ▼
-Cross-Attention Fusion Agent
-        │
-        ▼
-MRR Reconstruction Agent
-        │
-        ▼
-Quality Assessment Agent
-        │
-        ▼
-Confidence Estimation Agent
-        │
-        ▼
-Delivery Agent
-        │
-        ▼
-Cloud-Free GeoTIFF
-```
 
-# 4. Agent Communication Flow
+Parallel
 
-Each agent exchanges structured tensors and metadata instead of raw images.
+	
 
-|
-Sender
+Multiple agents can execute simultaneously
 
-|
+3. Complete Agent Workflow
 
-Receiver
+Every agent produces structured outputs that become inputs for the next stage.
 
-|
+4. Agent Communication
 
-Data
+Agents communicate using an internal ImagePacket object.
 
-|
-| --- | --- | --- |
-|
+Shared Data Structure
+ImagePacket = {
+    "image": GeoTIFF,
+    "metadata": {},
+    "cloud_mask": None,
+    "change_map": None,
+    "confidence_map": None,
+    "quality_score": None,
+    "timestamp": ""
+}
 
-Data Agent
+This allows loose coupling between modules.
 
-|
+5. Agent Responsibilities
+
+Agent
+
+	
+
+Primary Function
+
+
+
+
+A1
+
+	
+
+Data Retrieval
+
+
+
+
+A2
+
+	
 
 Preprocessing
 
-|
 
-TIFF + Metadata
 
-|
-|
 
-Preprocessing
+A3
 
-|
+	
 
 Cloud Detection
 
-|
 
-Normalized Tensor
 
-|
-|
 
-Cloud Detection
+A4
 
-|
+	
 
 Change Detection
 
-|
+
+
+
+A5
+
+	
+
+Adaptive Decision
+
+
+
+
+A6
+
+	
+
+Cross-Attention Fusion
+
+
+
+
+A7
+
+	
+
+Reconstruction
+
+
+
+
+A8
+
+	
+
+Quality Assessment
+
+
+
+
+A9
+
+	
+
+Confidence Estimation
+
+
+
+
+A10
+
+	
+
+Delivery & Visualization
+
+6. Agent 1 — Data Retrieval Agent
+Objective
+
+Retrieve all supporting datasets required for reconstruction.
+
+Inputs
+
+Uploaded GeoTIFF
+
+AOI
+
+Acquisition Date
+
+Tasks
+
+Read metadata
+
+Search historical imagery
+
+Retrieve Sentinel-1 SAR
+
+Validate CRS
+
+Match temporal records
+
+Input
+
+Data
+
+	
+
+Source
+
+
+
+
+Current Image
+
+	
+
+User Upload
+
+
+
+
+Historical
+
+	
+
+Archive
+
+
+
+
+SAR
+
+	
+
+Sentinel-1
+
+Output
+{
+  "historical":"hist_20240512.tif",
+  "sar":"sar_20240512.tif"
+}
+Technologies
+
+Rasterio
+
+GDAL
+
+GeoPandas
+
+7. Agent 2 — Preprocessing Agent
+Objective
+
+Prepare imagery for AI inference.
+
+Responsibilities
+
+Band extraction
+
+CRS alignment
+
+Resampling
+
+Normalization
+
+Patch generation
+
+Workflow
+Output
+
+256×256 patches
+
+Normalized tensors
+
+8. Agent 3 — Cloud & Shadow Detection Agent
+Objective
+
+Detect cloud-covered and shadow regions.
+
+AI Model
+
+Attention U-Net
+
+Outputs
 
 Cloud Mask
 
-|
-|
+Shadow Mask
 
-Change Detection
+Probability Map
 
-|
+Probability Levels
 
-Decision Agent
+Value
 
-|
+	
 
-Change Map
+Interpretation
 
-|
-|
 
-Decision Agent
 
-|
-
-Fusion Agent
-
-|
-
-Fusion Strategy
-
-|
-|
-
-Fusion Agent
-
-|
-
-Reconstruction
-
-|
-
-Multi-modal Features
-
-|
-|
-
-Reconstruction
-
-|
-
-Quality Agent
-
-|
-
-Candidate Images
-
-|
-|
-
-Quality Agent
-
-|
-
-Confidence
-
-|
-
-Best Candidate
-
-|
-|
-
-Confidence
-
-|
-
-Delivery
-
-|
-
-Final Image
-
-|
-
-# 5. Agent Responsibilities
-
-|
-Agent
-
-|
-
-Primary Role
-
-|
-| --- | --- |
-|
-
-Data Retrieval
-
-|
-
-Fetch historical imagery
-
-|
-|
-
-Preprocessing
-
-|
-
-Image alignment
-
-|
-|
-
-Cloud Detection
-
-|
-
-Generate cloud mask
-
-|
-|
-
-Change Detection
-
-|
-
-Detect temporal changes
-
-|
-|
-
-Decision Engine
-
-|
-
-Select reconstruction strategy
-
-|
-|
-
-Fusion
-
-|
-
-Combine SAR + Optical
-
-|
-|
-
-Reconstruction
-
-|
-
-Generate cloud-free image
-
-|
-|
-
-QAN
-
-|
-
-Evaluate image quality
-
-|
-|
-
-Confidence
-
-|
-
-Estimate pixel reliability
-
-|
-|
-
-Delivery
-
-|
-
-Export & dashboard
-
-|
-
-# 6. Agent 1 – Data Retrieval Agent
-
-## Purpose
-
-Retrieve all required geospatial datasets before AI processing begins.
-
-### Inputs
-
-* Cloudy LISS-IV Image
-
-* Metadata
-
-* Acquisition Date
-
-### External Sources
-
-* Historical LISS-IV
-
-* Sentinel-1 SAR
-
-* Orbit Metadata
-
-### Tasks
-
-1. Read metadata
-
-2. Find historical images
-
-3. Match acquisition dates
-
-4. Retrieve SAR image
-
-5. Select best temporal match
-
-### Output
-
-JSON
-
-```
-{
-  "liss":"historical_liss.tif",
-  "sar":"sentinel1.tif",
-  "date":"2026-02-18"
-}
-```
-
-### Technologies
-
-* Rasterio
-
-* GDAL
-
-* GeoPandas
-
-# 7. Agent 2 – Preprocessing Agent
-
-## Purpose
-
-Prepare images for deep learning.
-
-### Operations
-
-* Co-registration
-
-* Radiometric correction
-
-* Resampling
-
-* Normalization
-
-### Workflow
-
-```
-TIFF
- │
- ▼
-Read Bands
- │
- ▼
-Align Images
- │
- ▼
-Normalize
- │
- ▼
-Tensor
-```
-
-### Input Bands
-
-|
-Band
-
-|
-
-Description
-
-|
-| --- | --- |
-|
-
-B2
-
-|
-
-Blue
-
-|
-|
-
-B3
-
-|
-
-Green
-
-|
-|
-
-B4
-
-|
-
-Red
-
-|
-|
-
-B8
-
-|
-
-NIR
-
-|
-
-### Output
-
-Normalized 4-channel tensor.
-
-# 8. Agent 3 – Cloud & Shadow Detection Agent
-
-## Objective
-
-Identify cloud and shadow pixels.
-
-### AI Model
-
-U-Net Segmentation Network
-
-### Inputs
-
-* RGB
-
-* NIR
-
-* Texture Features
-
-### Outputs
-
-* Cloud Probability Map
-
-* Shadow Probability Map
-
-### Threshold
-
-|
-Probability
-
-|
-
-Label
-
-|
-| --- | --- |
-|
 
 0–0.3
 
-|
+	
 
 Clear
 
-|
-|
+
+
 
 0.3–0.6
 
-|
+	
 
 Uncertain
 
-|
-|
+
+
 
 0.6–1.0
 
-|
+	
 
 Cloud
 
-|
+Result
 
-### Result
+Binary segmentation suitable for reconstruction.
 
-Binary cloud mask.
+9. Agent 4 — Change Detection Agent
+Objective
 
-# 9. Agent 4 – Change Detection Agent
+Determine whether historical imagery is still valid.
 
-## Purpose
+Inputs
 
-Determine whether the landscape has changed since historical imagery.
+Current Optical
 
-### Inputs
+Historical Optical
 
-* Current Image
+Sentinel-1 SAR
 
-* Historical Image
+Analysis
 
-* SAR Image
+Pixel difference
 
-### Processing
+Texture similarity
 
-1. Temporal Difference
+SAR coherence
 
-2. SAR Coherence
-
-3. Pixel Comparison
-
-### Output
-
-Change Probability Map
-
-```
-Green → Stable
-Red → Changed
-```
-
-### Importance
-
-Prevents using outdated historical pixels.
-
-# 10. Agent 5 – Adaptive Decision Agent
-
-## Purpose
-
-Select the best reconstruction strategy.
-
-### Inputs
-
-* Cloud Density
-
-* Change Map
-
-* SAR Availability
-
-* Historical Reliability
-
-### Decision Logic
-
-|
-Condition
-
-|
-
-Strategy
-
-|
-| --- | --- |
-|
-
-Stable
-
-|
-
-Historical dominant
-
-|
-|
-
-Moderate
-
-|
-
-Adaptive fusion
-
-|
-|
-
-Changed
-
-|
-
-SAR dominant
-
-|
-
-### Output
-
-JSON
-
-```
-{
- "strategy":"adaptive_fusion"
-}
-```
-
-# 11. Agent 6 – Cross-Attention Fusion Agent
-
-## Purpose
-
-Fuse optical and radar features.
-
-### Inputs
-
-* Current LISS-IV
-
-* Historical LISS-IV
-
-* Sentinel-1 SAR
-
-* Cloud Mask
-
-### Deep Learning Block
-
-Cross-Attention Transformer
-
-### Output Features
-
-* Spatial Features
-
-* Spectral Features
-
-* Radar Features
-
-These are passed to reconstruction.
-
-# 12. Agent 7 – Multi-Hypothesis Reconstruction Agent
-
-## Purpose
-
-Generate multiple cloud-free candidates.
-
-### Candidate 1
-
-Historical Dominant
-
-Best for stable regions.
-
-### Candidate 2
-
-SAR Dominant
-
-Best for changed landscapes.
-
-### Candidate 3
-
-Adaptive Fusion
-
-Balanced reconstruction.
-
-### Output
-
-Three reconstructed images.
-
-# 13. Agent 8 – Quality Assessment Network (QAN)
-
-## Purpose
-
-Rank reconstruction candidates.
-
-### Evaluation Metrics
-
-* Spectral Consistency
-
-* Structural Similarity
-
-* SAR Consistency
-
-* Temporal Consistency
-
-### Scoring Formula
-
-Score=0.35Sspec+0.30Sssim+0.20Ssar+0.15StempScore=0.35S_{spec}+0.30S_{ssim}+0.20S_{sar}+0.15S_{temp}Score=0.35Sspec+0.30Sssim+0.20Ssar+0.15Stemp
-
-### Output
-
-Best candidate index.
-
-# 14. Agent 9 – Confidence Estimation Agent
-
-## Purpose
-
-Estimate reliability of every reconstructed pixel.
-
-### Confidence Levels
-
-|
-Score
-
-|
-
-Confidence
-
-|
-| --- | --- |
-|
-
-0.8–1.0
-
-|
-
-High
-
-|
-|
-
-0.5–0.8
-
-|
-
-Medium
-
-|
-|
-
-0–0.5
-
-|
-
-Low
-
-|
-
-### Output
-
-Confidence heatmap.
-
-### Use Cases
-
-* Scientific analysis
-
-* Decision support
-
-* Quality reporting
-
-# 15. Agent 10 – Delivery & Integration Agent
-
-## Purpose
-
-Provide analysis-ready outputs.
-
-### Outputs
-
-* Cloud-Free GeoTIFF
-
-* Confidence Map
-
-* Change Map
-
-* Quality Report
-
-* Metadata
-
-### Delivery Methods
-
-* Streamlit Dashboard
-
-* REST API
-
-* GeoTIFF Download
-
-# 16. Agent Memory & Data Exchange
-
-Agents communicate through structured objects.
-
-Python
-
-Run
-
-```
-ImagePacket
-{
-    image,
-    metadata,
-    cloud_mask,
-    change_map,
-    confidence,
-    timestamp
-}
-```
-
-This enables independent execution.
-
-# 17. Error Handling
-
-|
-Agent
-
-|
-
-Possible Error
-
-|
-
-Solution
-
-|
-| --- | --- | --- |
-|
-
-Data
-
-|
-
-Missing TIFF
-
-|
-
-Request new image
-
-|
-|
-
-Preprocessing
-
-|
-
-CRS mismatch
-
-|
-
-Reproject
-
-|
-|
-
-Cloud
-
-|
-
-Empty mask
-
-|
-
-Retry threshold
-
-|
-|
-
-Change
-
-|
-
-No historical image
-
-|
-
-Use SAR only
-
-|
-|
-
-Fusion
-
-|
-
-Missing SAR
-
-|
-
-Optical fallback
-
-|
-|
-
-Reconstruction
-
-|
-
-Low confidence
-
-|
-
-Generate alternative
-
-|
-|
-
-Delivery
-
-|
-
-Export failed
-
-|
-
-Recreate TIFF
-
-|
-
-# 18. Future Agent Enhancements
-
-## Planned Improvements
-
-### LangGraph Integration
-
-Each agent will become an autonomous LangGraph node.
-
-### LLM Decision Agent
-
-Explain reconstruction decisions in natural language.
-
-### Distributed Processing
-
-Parallel execution across GPU clusters.
-
-### Active Learning Agent
-
-Automatically collect difficult training samples.
-
-### Human-in-the-Loop
-
-Scientists can approve or reject reconstructed regions.
-
-# Agent Summary
-
-|
-Agent
-
-|
-
-AI Type
-
-|
+Temporal consistency
 
 Output
 
-|
-| --- | --- | --- |
-|
+Change Probability Map
 
-Data Retrieval
+Color
 
-|
+	
 
-Rule-Based
+Meaning
 
-|
 
-Historical datasets
 
-|
-|
+
+Green
+
+	
+
+Stable
+
+
+
+
+Yellow
+
+	
+
+Moderate
+
+
+
+
+Red
+
+	
+
+Changed
+
+10. Agent 5 — Adaptive Decision Agent
+Objective
+
+Choose the best reconstruction strategy.
+
+Decision Parameters
+
+Cloud Density
+
+Change Score
+
+SAR Availability
+
+Historical Reliability
+
+Decision Matrix
+
+Condition
+
+	
+
+Strategy
+
+
+
+
+Stable
+
+	
+
+Historical
+
+
+
+
+Changed
+
+	
+
+SAR
+
+
+
+
+Mixed
+
+	
+
+Adaptive Fusion
+
+Output
+{
+ "strategy":"adaptive_fusion"
+}
+11. Agent 6 — Cross-Attention Fusion Agent
+Objective
+
+Fuse multi-modal features from optical and radar imagery.
+
+Inputs
+
+Current RGB
+
+Historical RGB
+
+NIR
+
+SAR
+
+Cloud Mask
+
+AI Block
+
+Cross-Attention Transformer
+
+Output Features
+
+Spatial tensor
+
+Spectral tensor
+
+Radar features
+
+Attention maps
+
+These features are forwarded to reconstruction.
+
+12. Agent 7 — Multi-Hypothesis Reconstruction Agent
+Objective
+
+Generate multiple cloud-free candidates.
+
+Candidate Images
+
+Candidate
+
+	
+
+Description
+
+
+
+
+C1
+
+	
+
+Historical Dominant
+
+
+
+
+C2
+
+	
+
+SAR Dominant
+
+
+
+
+C3
+
+	
+
+Adaptive Fusion
+
+Why Multiple Outputs?
+
+Different regions require different reconstruction strategies.
+
+The Quality Agent selects the optimal candidate automatically.
+
+13. Agent 8 — Quality Assessment Network (QAN)
+Objective
+
+Evaluate every reconstructed image.
+
+Metrics
+
+Metric
+
+	
+
+Purpose
+
+
+
+
+SSIM
+
+	
+
+Structural Quality
+
+
+
+
+PSNR
+
+	
+
+Image Fidelity
+
+
+
+
+SAM
+
+	
+
+Spectral Accuracy
+
+
+
+
+ERGAS
+
+	
+
+Global Error
+
+Quality Score
+Q=0.35SSIM+0.30PSNR+0.20SAM+0.15ERGAS
+
+Highest score becomes the final output.
+
+14. Agent 9 — Confidence Estimation Agent
+Objective
+
+Estimate pixel-level reliability.
+
+Confidence Levels
+
+Score
+
+	
+
+Label
+
+
+
+
+0.8–1.0
+
+	
+
+High
+
+
+
+
+0.5–0.8
+
+	
+
+Medium
+
+
+
+
+0–0.5
+
+	
+
+Low
+
+Output
+
+A confidence heatmap visualized in the dashboard.
+
+Applications
+
+Scientific validation
+
+Disaster assessment
+
+Agricultural monitoring
+
+15. Agent 10 — Delivery & Visualization Agent
+Objective
+
+Generate analysis-ready products and deliver them to the dashboard.
+
+Outputs
+
+Cloud-Free GeoTIFF
+
+Confidence Map
+
+Change Map
+
+NDVI Map
+
+PDF Report
+
+Metadata JSON
+
+Dashboard Integration
+
+The agent updates:
+
+Image comparison panel
+
+Quality metrics
+
+NDVI visualization
+
+Download center
+
+16. Agent Memory & Data Exchange
+
+All agents use a shared structured object.
+
+Processing Packet
+PredictionPacket = {
+    "image_id": "",
+    "cloud_mask": "",
+    "change_map": "",
+    "candidate_images": [],
+    "best_candidate": "",
+    "metrics": {},
+    "confidence": ""
+}
+
+Advantages:
+
+Consistent data format
+
+Easy debugging
+
+Modular processing
+
+17. Error Recovery Strategy
+
+Agent
+
+	
+
+Possible Error
+
+	
+
+Recovery
+
+
+
+
+Data
+
+	
+
+Missing TIFF
+
+	
+
+Request re-upload
+
+
+
 
 Preprocessing
 
-|
+	
 
-Image Processing
+CRS mismatch
 
-|
+	
 
-Normalized tensor
+Reproject
 
-|
-|
+
+
 
 Cloud Detection
 
-|
+	
 
-U-Net
+Empty mask
 
-|
+	
 
-Cloud mask
+Retry threshold
 
-|
-|
+
+
 
 Change Detection
 
-|
+	
 
-CNN + SAR
+No historical image
 
-|
+	
 
-Change map
+Use SAR only
 
-|
-|
 
-Decision Engine
 
-|
 
-Rule + ML
+Fusion
 
-|
+	
 
-Fusion strategy
+Missing SAR
 
-|
-|
+	
 
-Cross-Attention
+Optical fallback
 
-|
 
-Transformer
 
-|
-
-Feature maps
-
-|
-|
 
 Reconstruction
 
-|
+	
 
-U-Net
+Low quality
 
-|
+	
 
-3 candidates
+Generate alternative
 
-|
-|
 
-QAN
 
-|
-
-CNN
-
-|
-
-Ranked image
-
-|
-|
-
-Confidence
-
-|
-
-Probabilistic
-
-|
-
-Reliability map
-
-|
-|
 
 Delivery
 
-|
+	
+
+Export failed
+
+	
+
+Retry generation
+
+Every failure is logged for traceability.
+
+18. Future LangGraph Integration
+
+The current pipeline is sequential, but future versions will convert every module into a LangGraph autonomous agent.
+
+Planned Agent Graph
+Planner Agent
+      │
+      ├───────────────┐
+      ▼               ▼
+Data Agent      Metadata Agent
+      │               │
+      └───────┬───────┘
+              ▼
+      Preprocessing Agent
+              │
+              ▼
+      Cloud Detection
+              │
+              ▼
+      Change Detection
+              │
+              ▼
+      Fusion Agent
+              │
+              ▼
+      Reconstruction Agent
+              │
+              ▼
+      Quality Agent
+              │
+              ▼
+      Report Agent
+
+Benefits:
+
+Autonomous execution
+
+Parallel reasoning
+
+Dynamic workflow routing
+
+Explainable AI decisions
+
+Agent Lifecycle
+
+Stage
+
+	
+
+Agent
+
+
+
+
+Data Acquisition
+
+	
+
+A1
+
+
+
+
+Image Preparation
+
+	
+
+A2
+
+
+
+
+Segmentation
+
+	
+
+A3
+
+
+
+
+Temporal Analysis
+
+	
+
+A4
+
+
+
+
+Decision Making
+
+	
+
+A5
+
+
+
+
+Feature Fusion
+
+	
+
+A6
+
+
+
+
+Reconstruction
+
+	
+
+A7
+
+
+
+
+Validation
+
+	
+
+A8
+
+
+
+
+Confidence
+
+	
+
+A9
+
+
+
+
+Delivery
+
+	
+
+A10
+
+Complete Agent Workflow
+Agent Summary
+
+Agent
+
+	
+
+AI Technique
+
+	
+
+Output
+
+
+
+
+A1
+
+	
+
+Rule-Based Retrieval
+
+	
+
+Historical Images
+
+
+
+
+A2
+
+	
+
+Image Processing
+
+	
+
+Normalized Tensor
+
+
+
+
+A3
+
+	
+
+Attention U-Net
+
+	
+
+Cloud Mask
+
+
+
+
+A4
+
+	
+
+CNN + SAR
+
+	
+
+Change Map
+
+
+
+
+A5
+
+	
+
+Rule Engine
+
+	
+
+Reconstruction Strategy
+
+
+
+
+A6
+
+	
+
+Cross-Attention
+
+	
+
+Multi-Modal Features
+
+
+
+
+A7
+
+	
+
+Deep Reconstruction
+
+	
+
+3 Candidate Images
+
+
+
+
+A8
+
+	
+
+Quality Network
+
+	
+
+Best Candidate
+
+
+
+
+A9
+
+	
+
+Probabilistic Model
+
+	
+
+Confidence Heatmap
+
+
+
+
+A10
+
+	
 
 Service Layer
 
-|
+	
 
-GeoTIFF & Reports
-
-|
-
-## Final Workflow
-
-```
-Input Satellite Image
-        │
-        ▼
-Data Retrieval Agent
-        │
-        ▼
-Preprocessing Agent
-        │
-        ▼
-Cloud Detection Agent
-        │
-        ▼
-Change Detection Agent
-        │
-        ▼
-Adaptive Decision Agent
-        │
-        ▼
-Cross-Attention Fusion Agent
-        │
-        ▼
-Multi-Hypothesis Reconstruction
-        │
-        ▼
-Quality Assessment Network
-        │
-        ▼
-Confidence Estimation
-        │
-        ▼
-Delivery Dashboard + API + GeoTIFF
-```
-
-This `AGENTS.md` serves as the complete technical specification for the multi-agent AI architecture of the project.
+GeoTIFF & Reportss
