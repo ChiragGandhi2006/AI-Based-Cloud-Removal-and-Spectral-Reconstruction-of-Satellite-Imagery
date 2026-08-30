@@ -15,6 +15,7 @@ from PIL import Image
 
 import folium
 from folium.plugins import Draw
+from folium.features import DivIcon
 from streamlit_folium import st_folium
 
 from src.preprocessing.data_loader import GeoTIFFLoader, ImageMetadata, validate_geotiff
@@ -372,21 +373,40 @@ if nav_page == "🌐 Dashboard Overview":
     if "map_zoom" not in st.session_state:
         st.session_state.map_zoom = 12
 
-    # Build Folium Leaflet Map (Full Size)
+    # Build Folium Leaflet Map with 100% Free OpenStreetMap & Esri (No API Key Required)
     m = folium.Map(
         location=st.session_state.map_center,
         zoom_start=st.session_state.map_zoom,
-        tiles="CartoDB dark_matter",
+        tiles="OpenStreetMap",  # 100% Free OpenStreetMap with all road, city, and suburb names
         control_scale=True
     )
 
-    # Esri Satellite Layer Option
+    # 1. High-Resolution Satellite Imagery (100% Free Esri World GIS)
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         attr="Esri World Imagery",
-        name="High-Res Satellite Imagery (Esri)",
+        name="🛰️ Satellite Imagery (Esri World)",
         overlay=False,
         control=True
+    ).add_to(m)
+
+    # 2. World Topographic & Street Map (100% Free Esri Topo)
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+        attr="Esri World Topo",
+        name="🗺️ Topographic & Street Map",
+        overlay=False,
+        control=True
+    ).add_to(m)
+
+    # 3. Transparent Place Names & Road Labels Overlay (100% Free)
+    folium.TileLayer(
+        tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
+        attr="Esri Place Names & Boundaries",
+        name="🏷️ Place Names & Road Labels Overlay",
+        overlay=True,
+        control=True,
+        show=True
     ).add_to(m)
 
     # Interactive Drawing Tool for Custom AOI Rectangles
@@ -411,7 +431,7 @@ if nav_page == "🌐 Dashboard Overview":
         }
     ).add_to(m)
 
-    # Add all 35 scenes to map as interactive polygons & markers
+    # Add all 35 scenes to map as interactive polygons, pins, and floating place name badges
     current_sel = st.session_state.selected_sample
     for s_key, s_data in sample_scenes.items():
         bounds = s_data["bounds"]  # [lon_min, lat_min, lon_max, lat_max]
@@ -434,32 +454,69 @@ if nav_page == "🌐 Dashboard Overview":
             tooltip=f"{'🔴 ACTIVE: ' if is_current else ''}{s_data['region']} (Click to Select)"
         ).add_to(m)
 
-        # Marker Pin
-        pin_icon = "star" if is_current else ("crosshairs" if is_pune else "info-sign")
-        pin_color = "red" if is_current else ("blue" if is_pune else "green")
+        # Permanent Floating Place Name Label Badge
+        clean_name = s_data['region'].replace('Maharashtra, ', '').replace('West Bengal, ', '').replace('Andhra Pradesh, ', '')
         folium.Marker(
             location=[c_lat, c_lon],
-            tooltip=f"📍 {s_data['region']}",
-            popup=folium.Popup(f"<b>{s_data['region']}</b><br>Sensor: {s_data['optical_sensor']}<br>Resolution: {s_data.get('resolution', 10.0)}m<br>Cloud: {s_data.get('cloud_cover_pct', 20.0)}%", max_width=220),
-            icon=folium.Icon(color=pin_color, icon=pin_icon, prefix="glyphicon")
+            icon=DivIcon(
+                icon_size=(160, 32),
+                icon_anchor=(80, 16),
+                html=f"""
+                <div style="
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: #FFFFFF;
+                    background: {'linear-gradient(135deg, #E11D48, #BE123C)' if is_current else ('linear-gradient(135deg, #0284C7, #0369A1)' if is_pune else 'linear-gradient(135deg, #059669, #047857)')};
+                    padding: 4px 10px;
+                    border-radius: 14px;
+                    border: 1.5px solid {'#FDA4AF' if is_current else '#BAE6FD'};
+                    white-space: nowrap;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+                    text-align: center;
+                    pointer-events: none;
+                ">
+                    {'🔴 ' if is_current else '📍 '}{clean_name}
+                </div>
+                """
+            )
         ).add_to(m)
 
-    folium.LayerControl().add_to(m)
+    folium.LayerControl(position="topright", collapsed=False).add_to(m)
 
-    # Render Full-Page Height Map and capture click events
-    map_res = st_folium(m, width="100%", height=520, key="overview_folium_map")
+    # Initialize event deduplication keys to prevent infinite rerun loops
+    if "last_processed_drawing" not in st.session_state:
+        st.session_state.last_processed_drawing = None
+    if "last_processed_click" not in st.session_state:
+        st.session_state.last_processed_click = None
 
-    # Handle Click on Map or Drawn Rectangle
+    # Render Full-Page Height Map and capture only actionable drawing & click events
+    map_res = st_folium(
+        m,
+        width="100%",
+        height=520,
+        key="overview_folium_map",
+        returned_objects=["last_active_drawing", "last_clicked"]
+    )
+
+    # Handle Click on Map or Drawn Rectangle (Executed ONLY on NEW user interactions)
     if map_res:
-        # 1. Check if user drew a custom rectangle
-        if map_res.get("last_active_drawing"):
-            drawn_geom = map_res["last_active_drawing"]["geometry"]
-            if drawn_geom["type"] == "Polygon":
+        # 1. Check if user drew a NEW custom rectangle
+        active_drawing = map_res.get("last_active_drawing")
+        if active_drawing and active_drawing != st.session_state.last_processed_drawing:
+            st.session_state.last_processed_drawing = active_drawing
+            drawn_geom = active_drawing.get("geometry", {})
+            if drawn_geom.get("type") == "Polygon":
                 coords = drawn_geom["coordinates"][0]
                 lons = [pt[0] for pt in coords]
                 lats = [pt[1] for pt in coords]
                 d_bounds = (round(min(lons), 4), round(min(lats), 4), round(max(lons), 4), round(max(lats), 4))
                 custom_name = f"Live Map AOI [{d_bounds[1]:.3f}°N, {d_bounds[0]:.3f}°E]"
+                
+                # Keep map centered directly on the user's drawn AOI
+                center_lat = (d_bounds[1] + d_bounds[3]) / 2.0
+                center_lon = (d_bounds[0] + d_bounds[2]) / 2.0
+                st.session_state.map_center = [center_lat, center_lon]
                 
                 # Fetch REAL-WORLD satellite imagery directly from live map stream
                 with st.spinner(f"🛰️ Ingesting Live Satellite Imagery from Map Canvas for {custom_name}..."):
@@ -475,10 +532,12 @@ if nav_page == "🌐 Dashboard Overview":
                     run_prediction_for_scene(live_custom_scene, strategy_override=s_map[strat_choice])
                 st.rerun()
 
-        # 2. Check if user clicked a marker or coordinate point
-        elif map_res.get("last_clicked"):
-            c_lat = map_res["last_clicked"]["lat"]
-            c_lng = map_res["last_clicked"]["lng"]
+        # 2. Check if user clicked a NEW marker or coordinate point
+        curr_click = map_res.get("last_clicked")
+        if curr_click and curr_click != st.session_state.last_processed_click:
+            st.session_state.last_processed_click = curr_click
+            c_lat = curr_click["lat"]
+            c_lng = curr_click["lng"]
             
             # Find closest regional scene to click
             best_scene_key = None
@@ -500,6 +559,10 @@ if nav_page == "🌐 Dashboard Overview":
             if best_scene_key and best_scene_key != st.session_state.selected_sample and min_dist < 2.0:
                 st.session_state.selected_sample = best_scene_key
                 target_scene_info = sample_scenes[best_scene_key]
+                
+                # Center map on clicked AOI
+                t_b = target_scene_info["bounds"]
+                st.session_state.map_center = [(t_b[1] + t_b[3]) / 2.0, (t_b[0] + t_b[2]) / 2.0]
                 
                 # Fetch fresh live real-world satellite imagery for clicked location
                 with st.spinner(f"🛰️ Streaming Live Real-World Satellite Feed for {best_scene_key}..."):
