@@ -1,0 +1,45 @@
+{
+  "image_id": "scene_pune_hadapsar",
+  "status": "Initialized",
+  "best_candidate": "C1",
+  "cloud_percentage": 20.99,
+  "shadow_percentage": 7.59,
+  "strategy": "adaptive",
+  "quality": {
+    "psnr": 30.35,
+    "ssim": 0.897,
+    "mae": 0.0232,
+    "rmse": 0.0304,
+    "sam": 2.86,
+    "ergas": 0.72,
+    "composite_score": 0.832,
+    "rating": "Good"
+  },
+  "confidence": {
+    "mean_confidence": 0.825,
+    "high_confidence_pct": 78.19,
+    "medium_confidence_pct": 21.16,
+    "low_confidence_pct": 0.65
+  },
+  "ndvi": {
+    "mean_ndvi": 0.306,
+    "reference_mean_ndvi": 0.332,
+    "ndvi_mae": 0.0454,
+    "vegetation_coverage_pct": 58.68
+  },
+  "landcover": {
+    "vegetation": 0.0,
+    "agriculture": 61.9,
+    "water": 3.9,
+    "urban": 3.1,
+    "bare_land": 31.1
+  },
+  "elapsed_seconds": 0.0,
+  "files": {
+    "cloud_free_geotiff": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\outputs\\scene_pune_hadapsar_cloud_free.tif",
+    "confidence_geotiff": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\outputs\\scene_pune_hadapsar_confidence.tif",
+    "change_geotiff": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\outputs\\scene_pune_hadapsar_change_map.tif",
+    "pdf_report": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\reports\\scene_pune_hadapsar_quality_report.pdf",
+    "metadata_json": null
+  }
+}

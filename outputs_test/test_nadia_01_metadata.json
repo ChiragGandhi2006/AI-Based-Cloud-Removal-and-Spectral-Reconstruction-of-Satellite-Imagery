@@ -2,30 +2,30 @@
   "image_id": "test_nadia_01",
   "status": "Initialized",
   "best_candidate": "C1",
-  "cloud_percentage": 8.14,
+  "cloud_percentage": 8.19,
   "shadow_percentage": 4.76,
-  "strategy": "adaptive",
+  "strategy": "historical",
   "quality": {
-    "psnr": 28.44,
+    "psnr": 28.46,
     "ssim": 0.844,
     "mae": 0.0266,
-    "rmse": 0.0378,
-    "sam": 4.34,
+    "rmse": 0.0377,
+    "sam": 4.33,
     "ergas": 1.69,
     "composite_score": 0.75,
-    "rating": "Moderate"
+    "rating": "Good"
   },
   "confidence": {
     "mean_confidence": 0.882,
-    "high_confidence_pct": 91.38,
-    "medium_confidence_pct": 8.34,
-    "low_confidence_pct": 0.28
+    "high_confidence_pct": 91.35,
+    "medium_confidence_pct": 8.39,
+    "low_confidence_pct": 0.26
   },
   "ndvi": {
     "mean_ndvi": 0.643,
     "reference_mean_ndvi": 0.715,
-    "ndvi_mae": 0.09,
-    "vegetation_coverage_pct": 90.95
+    "ndvi_mae": 0.0897,
+    "vegetation_coverage_pct": 90.98
   },
   "landcover": {
     "vegetation": 81.4,

@@ -1,5 +1,120 @@
 [
   {
+    "image_id": "scene_pune_hadapsar",
+    "region": "Maharashtra, Pune Hadapsar & Magarpatta",
+    "terrain_type": "urban",
+    "date": "2024-05-18",
+    "optical_sensor": "LISS-IV",
+    "sar_sensor": "Sentinel-1 C-SAR",
+    "crs": "EPSG:4326",
+    "resolution": 5.8,
+    "cloud_cover_pct": 20.02,
+    "bounds": [
+      73.915,
+      18.49,
+      73.965,
+      18.54
+    ],
+    "files": {
+      "cloudy": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\cloudy\\scene_pune_hadapsar_cloudy.tif",
+      "clear": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\clear\\scene_pune_hadapsar_clear.tif",
+      "historical": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\historical\\scene_pune_hadapsar_historical.tif",
+      "sar": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\sar\\scene_pune_hadapsar_sar.tif"
+    }
+  },
+  {
+    "image_id": "scene_pune_hinjawadi",
+    "region": "Maharashtra, Pune Hinjawadi IT Hub",
+    "terrain_type": "urban",
+    "date": "2024-05-18",
+    "optical_sensor": "Sentinel-2",
+    "sar_sensor": "Sentinel-1 C-SAR",
+    "crs": "EPSG:4326",
+    "resolution": 10.0,
+    "cloud_cover_pct": 10.04,
+    "bounds": [
+      73.71,
+      18.57,
+      73.76,
+      18.62
+    ],
+    "files": {
+      "cloudy": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\cloudy\\scene_pune_hinjawadi_cloudy.tif",
+      "clear": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\clear\\scene_pune_hinjawadi_clear.tif",
+      "historical": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\historical\\scene_pune_hinjawadi_historical.tif",
+      "sar": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\sar\\scene_pune_hinjawadi_sar.tif"
+    }
+  },
+  {
+    "image_id": "scene_pune_kothrud",
+    "region": "Maharashtra, Pune Kothrud & Hills",
+    "terrain_type": "urban",
+    "date": "2024-05-18",
+    "optical_sensor": "LISS-IV",
+    "sar_sensor": "Sentinel-1 C-SAR",
+    "crs": "EPSG:4326",
+    "resolution": 5.8,
+    "cloud_cover_pct": 18.1,
+    "bounds": [
+      73.79,
+      18.49,
+      73.84,
+      18.54
+    ],
+    "files": {
+      "cloudy": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\cloudy\\scene_pune_kothrud_cloudy.tif",
+      "clear": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\clear\\scene_pune_kothrud_clear.tif",
+      "historical": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\historical\\scene_pune_kothrud_historical.tif",
+      "sar": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\sar\\scene_pune_kothrud_sar.tif"
+    }
+  },
+  {
+    "image_id": "scene_pune_shivajinagar",
+    "region": "Maharashtra, Pune Shivajinagar Confluence",
+    "terrain_type": "urban",
+    "date": "2024-05-18",
+    "optical_sensor": "LISS-IV",
+    "sar_sensor": "Sentinel-1 C-SAR",
+    "crs": "EPSG:4326",
+    "resolution": 5.8,
+    "cloud_cover_pct": 25.29,
+    "bounds": [
+      73.835,
+      18.515,
+      73.885,
+      18.565
+    ],
+    "files": {
+      "cloudy": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\cloudy\\scene_pune_shivajinagar_cloudy.tif",
+      "clear": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\clear\\scene_pune_shivajinagar_clear.tif",
+      "historical": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\historical\\scene_pune_shivajinagar_historical.tif",
+      "sar": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\sar\\scene_pune_shivajinagar_sar.tif"
+    }
+  },
+  {
+    "image_id": "scene_pune_khadakwasla",
+    "region": "Maharashtra, Pune Khadakwasla Lake",
+    "terrain_type": "forest",
+    "date": "2024-05-18",
+    "optical_sensor": "Sentinel-2",
+    "sar_sensor": "Sentinel-1 C-SAR",
+    "crs": "EPSG:4326",
+    "resolution": 10.0,
+    "cloud_cover_pct": 12.57,
+    "bounds": [
+      73.74,
+      18.41,
+      73.79,
+      18.46
+    ],
+    "files": {
+      "cloudy": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\cloudy\\scene_pune_khadakwasla_cloudy.tif",
+      "clear": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\clear\\scene_pune_khadakwasla_clear.tif",
+      "historical": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\historical\\scene_pune_khadakwasla_historical.tif",
+      "sar": "D:\\VIT,Pune\\SEM 5\\Machine Learning\\AI-Based Cloud Removal and Spectral Reconstruction of Satellite Imagery\\data\\sar\\scene_pune_khadakwasla_sar.tif"
+    }
+  },
+  {
     "image_id": "scene_01_west_bengal_nadia",
     "region": "West Bengal, Nadia District",
     "terrain_type": "agriculture",
@@ -8,7 +123,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 20.02,
+    "cloud_cover_pct": 24.68,
     "bounds": [
       88.4,
       22.9,
@@ -24,14 +139,14 @@
   },
   {
     "image_id": "scene_02_maharashtra_pune",
-    "region": "Maharashtra, Pune Basin",
+    "region": "Maharashtra, Pune Metropolitan Basin",
     "terrain_type": "urban",
     "date": "2024-04-18",
     "optical_sensor": "LISS-IV",
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 10.04,
+    "cloud_cover_pct": 11.68,
     "bounds": [
       73.8,
       18.45,
@@ -54,7 +169,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 18.1,
+    "cloud_cover_pct": 12.4,
     "bounds": [
       76.3,
       9.45,
@@ -77,7 +192,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 25.29,
+    "cloud_cover_pct": 14.25,
     "bounds": [
       75.8,
       30.85,
@@ -100,7 +215,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 12.57,
+    "cloud_cover_pct": 16.72,
     "bounds": [
       77.55,
       12.9,
@@ -123,7 +238,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 24.68,
+    "cloud_cover_pct": 11.45,
     "bounds": [
       77.98,
       30.28,
@@ -146,7 +261,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 11.68,
+    "cloud_cover_pct": 16.57,
     "bounds": [
       70.85,
       26.85,
@@ -169,7 +284,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 12.4,
+    "cloud_cover_pct": 15.31,
     "bounds": [
       85.8,
       20.4,
@@ -192,7 +307,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 14.25,
+    "cloud_cover_pct": 15.77,
     "bounds": [
       93.3,
       26.6,
@@ -215,7 +330,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 16.72,
+    "cloud_cover_pct": 19.23,
     "bounds": [
       79.1,
       10.75,
@@ -238,7 +353,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 11.45,
+    "cloud_cover_pct": 16.15,
     "bounds": [
       78.4,
       17.3,
@@ -261,7 +376,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 16.57,
+    "cloud_cover_pct": 5.95,
     "bounds": [
       69.8,
       23.7,
@@ -284,7 +399,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 15.31,
+    "cloud_cover_pct": 13.44,
     "bounds": [
       77.35,
       23.2,
@@ -307,7 +422,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 15.77,
+    "cloud_cover_pct": 19.65,
     "bounds": [
       77.1,
       31.05,
@@ -330,7 +445,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 19.23,
+    "cloud_cover_pct": 16.08,
     "bounds": [
       83.25,
       17.65,
@@ -353,7 +468,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 16.15,
+    "cloud_cover_pct": 10.3,
     "bounds": [
       85.1,
       25.55,
@@ -376,7 +491,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 5.95,
+    "cloud_cover_pct": 17.19,
     "bounds": [
       85.28,
       23.3,
@@ -399,7 +514,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 13.44,
+    "cloud_cover_pct": 19.98,
     "bounds": [
       81.8,
       19.1,
@@ -422,7 +537,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 19.65,
+    "cloud_cover_pct": 20.52,
     "bounds": [
       73.8,
       15.45,
@@ -445,7 +560,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 16.08,
+    "cloud_cover_pct": 15.81,
     "bounds": [
       76.9,
       29.65,
@@ -468,7 +583,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 10.3,
+    "cloud_cover_pct": 15.38,
     "bounds": [
       82.95,
       25.25,
@@ -491,7 +606,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 17.19,
+    "cloud_cover_pct": 14.48,
     "bounds": [
       73.75,
       19.95,
@@ -514,7 +629,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 19.98,
+    "cloud_cover_pct": 20.63,
     "bounds": [
       76.05,
       11.6,
@@ -537,7 +652,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 20.52,
+    "cloud_cover_pct": 22.34,
     "bounds": [
       88.75,
       21.8,
@@ -560,7 +675,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 15.81,
+    "cloud_cover_pct": 14.8,
     "bounds": [
       76.6,
       12.25,
@@ -583,7 +698,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 5.8,
-    "cloud_cover_pct": 15.38,
+    "cloud_cover_pct": 13.82,
     "bounds": [
       72.78,
       21.15,
@@ -606,7 +721,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 14.48,
+    "cloud_cover_pct": 12.17,
     "bounds": [
       78.08,
       9.88,
@@ -629,7 +744,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 20.63,
+    "cloud_cover_pct": 16.24,
     "bounds": [
       73.65,
       24.55,
@@ -652,7 +767,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 22.34,
+    "cloud_cover_pct": 15.74,
     "bounds": [
       85.25,
       19.65,
@@ -675,7 +790,7 @@
     "sar_sensor": "Sentinel-1 C-SAR",
     "crs": "EPSG:4326",
     "resolution": 10.0,
-    "cloud_cover_pct": 14.8,
+    "cloud_cover_pct": 13.27,
     "bounds": [
       91.7,
       26.1,

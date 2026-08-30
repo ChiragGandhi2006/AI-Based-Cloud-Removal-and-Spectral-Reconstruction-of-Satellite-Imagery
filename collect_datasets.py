@@ -162,8 +162,16 @@ def generate_full_dataset_catalog():
         os.makedirs(d, exist_ok=True)
 
     regions_spec = [
+        # Pune Specific Micro-Neighborhoods
+        ("scene_pune_hadapsar", "Maharashtra, Pune Hadapsar & Magarpatta", "urban", "LISS-IV", 5.8, (73.915, 18.490, 73.965, 18.540), "2024-05-18"),
+        ("scene_pune_hinjawadi", "Maharashtra, Pune Hinjawadi IT Hub", "urban", "Sentinel-2", 10.0, (73.710, 18.570, 73.760, 18.620), "2024-05-18"),
+        ("scene_pune_kothrud", "Maharashtra, Pune Kothrud & Hills", "urban", "LISS-IV", 5.8, (73.790, 18.490, 73.840, 18.540), "2024-05-18"),
+        ("scene_pune_shivajinagar", "Maharashtra, Pune Shivajinagar Confluence", "urban", "LISS-IV", 5.8, (73.835, 18.515, 73.885, 18.565), "2024-05-18"),
+        ("scene_pune_khadakwasla", "Maharashtra, Pune Khadakwasla Lake", "forest", "Sentinel-2", 10.0, (73.740, 18.410, 73.790, 18.460), "2024-05-18"),
+
+        # Indian Regional Geographic Diversity
         ("scene_01_west_bengal_nadia", "West Bengal, Nadia District", "agriculture", "Sentinel-2", 10.0, (88.40, 22.90, 88.55, 23.05), "2024-05-12"),
-        ("scene_02_maharashtra_pune", "Maharashtra, Pune Basin", "urban", "LISS-IV", 5.8, (73.80, 18.45, 73.95, 18.60), "2024-04-18"),
+        ("scene_02_maharashtra_pune", "Maharashtra, Pune Metropolitan Basin", "urban", "LISS-IV", 5.8, (73.80, 18.45, 73.95, 18.60), "2024-04-18"),
         ("scene_03_kerala_alappuzha", "Kerala, Alappuzha Backwaters", "coastal", "Sentinel-2", 10.0, (76.30, 9.45, 76.45, 9.60), "2024-06-02"),
         ("scene_04_punjab_ludhiana", "Punjab, Ludhiana Farms", "agriculture", "Sentinel-2", 10.0, (75.80, 30.85, 75.95, 31.00), "2024-03-22"),
         ("scene_05_karnataka_bengaluru", "Karnataka, Bengaluru Urban", "urban", "LISS-IV", 5.8, (77.55, 12.90, 77.70, 13.05), "2024-04-10"),
@@ -314,6 +322,98 @@ def generate_full_dataset_catalog():
     print(f"Total GeoTIFF Files: {len(manifest) * 4} (Cloudy, Clear, Historical, SAR)")
     print(f"Catalog Manifest: {manifest_path}")
     print(f"Metadata CSV: {csv_path}")
+
+
+def generate_custom_aoi_scene(
+    bounds: Tuple[float, float, float, float],
+    region_name: str = "Custom Selected AOI",
+    terrain: str = "urban",
+    sensor: str = "LISS-IV",
+    res: float = 5.8
+) -> Dict[str, Any]:
+    """
+    Dynamically creates multi-modal satellite files (Cloudy, Clear, Historical, SAR)
+    for any custom latitude/longitude bounding box clicked or drawn on the map.
+    """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    dirs = {
+        "cloudy": os.path.join(base_dir, "data", "cloudy"),
+        "clear": os.path.join(base_dir, "data", "clear"),
+        "historical": os.path.join(base_dir, "data", "historical"),
+        "sar": os.path.join(base_dir, "data", "sar")
+    }
+    for d in dirs.values():
+        os.makedirs(d, exist_ok=True)
+
+    clean_id = "scene_custom_" + "".join(c if c.isalnum() else "_" for c in region_name.lower())[:30]
+    H, W = 512, 512
+    seed = int(abs(hash(region_name)) % 10000)
+
+    clear_optical = generate_regional_landscape(H, W, terrain, seed=seed)
+
+    hist_optical = clear_optical.copy()
+    hist_optical[:, :, 0] = np.clip(hist_optical[:, :, 0] * 1.02 + 0.01, 0.0, 1.0)
+    hist_optical[:, :, 1] = np.clip(hist_optical[:, :, 1] * 0.95 + 0.01, 0.0, 1.0)
+    hist_optical[:, :, 2] = np.clip(hist_optical[:, :, 2] * 1.04 - 0.01, 0.0, 1.0)
+    hist_optical[:, :, 3] = np.clip(hist_optical[:, :, 3] * 0.96 + 0.02, 0.0, 1.0)
+    field_shifts = ndimage.gaussian_filter(np.random.randn(H, W) * 0.015, sigma=3.0)[:, :, np.newaxis]
+    hist_optical = np.clip(hist_optical + field_shifts, 0.01, 0.99).astype(np.float32)
+
+    cloud_density, cloud_mask, shadow_mask = generate_clouds_and_shadows(H, W, seed=seed + 33)
+    cloud_pct = float(np.sum(cloud_mask) / float(H * W) * 100.0)
+
+    c_density_3d = cloud_density[:, :, np.newaxis]
+    s_mask_3d = shadow_mask[:, :, np.newaxis]
+    cloud_color = np.array([0.92, 0.95, 0.98, 0.90], dtype=np.float32)
+    cloudy_optical = (1.0 - c_density_3d) * clear_optical + c_density_3d * cloud_color
+    cloudy_optical = np.where(s_mask_3d > 0, cloudy_optical * 0.40, cloudy_optical)
+    cloudy_optical = np.clip(cloudy_optical, 0.0, 1.0).astype(np.float32)
+
+    sar_image = generate_sar_backscatter(clear_optical, seed=seed + 88)
+
+    meta = ImageMetadata(
+        image_id=clean_id,
+        filename=f"{clean_id}_cloudy.tif",
+        width=W,
+        height=H,
+        bands=4,
+        crs="EPSG:4326",
+        resolution=res,
+        sensor=sensor,
+        acquisition_date="2024-05-20",
+        bounds=bounds,
+        data_type="float32",
+        cloud_coverage_percent=round(cloud_pct, 2)
+    )
+
+    cloudy_path = os.path.join(dirs["cloudy"], f"{clean_id}_cloudy.tif")
+    clear_path = os.path.join(dirs["clear"], f"{clean_id}_clear.tif")
+    hist_path = os.path.join(dirs["historical"], f"{clean_id}_hist.tif")
+    sar_path = os.path.join(dirs["sar"], f"{clean_id}_sar.tif")
+
+    loader = GeoTIFFLoader()
+    loader.save_raster(cloudy_path, cloudy_optical, meta)
+    loader.save_raster(clear_path, clear_optical, meta)
+    loader.save_raster(hist_path, hist_optical, meta)
+    loader.save_raster(sar_path, sar_image, meta)
+
+    return {
+        "id": clean_id,
+        "region": region_name,
+        "terrain_type": terrain,
+        "optical_sensor": sensor,
+        "sar_sensor": "Sentinel-1 C-SAR",
+        "date": "2024-05-20",
+        "resolution_m": res,
+        "cloud_cover_pct": round(cloud_pct, 2),
+        "bounds": list(bounds),
+        "paths": {
+            "cloudy": cloudy_path,
+            "clear": clear_path,
+            "historical": hist_path,
+            "sar": sar_path
+        }
+    }
 
 
 if __name__ == "__main__":

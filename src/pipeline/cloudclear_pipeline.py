@@ -32,6 +32,7 @@ from ..qan.quality_network import QualityAssessmentNetwork, QualityMetrics
 from ..confidence.confidence_estimator import ConfidenceEstimator, ConfidenceReport
 from ..analysis.ndvi import NDVIAnalyzer, NDVIReport
 from ..analysis.landcover import LandCoverClassifier, LandCoverReport
+from ..analysis.sub_cloud_predictor import SubCloudFeaturePredictor, SubCloudFeatureReport
 from ..reports.report_generator import PDFReportGenerator
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class PredictionPacket:
     confidence_report: Optional[ConfidenceReport] = None
     ndvi_report: Optional[NDVIReport] = None
     landcover_report: Optional[LandCoverReport] = None
+    sub_cloud_report: Optional[SubCloudFeatureReport] = None
 
     # File output paths
     cloud_free_geotiff_path: Optional[str] = None
@@ -125,6 +127,7 @@ class CloudClearPipeline:
         self.confidence_estimator = ConfidenceEstimator()
         self.ndvi_analyzer = NDVIAnalyzer()
         self.landcover_classifier = LandCoverClassifier()
+        self.sub_cloud_predictor = SubCloudFeaturePredictor()
         self.pdf_generator = PDFReportGenerator()
 
     def run(
@@ -261,13 +264,19 @@ class CloudClearPipeline:
         )
         packet.confidence_report = conf_report
 
-        # --- Stage 10: Analysis-Ready Products (NDVI & Land Cover) ---
-        report_step(92.0, "Stage 10: NDVI vegetation analytics & Land Cover distribution...")
+        # --- Stage 10: Analysis-Ready Products (NDVI, Land Cover & Sub-Cloud Feature Decoding) ---
+        report_step(92.0, "Stage 10: NDVI vegetation analytics & Sub-Cloud Ground Feature decoding...")
         packet.ndvi_report = self.ndvi_analyzer.analyze(
             reconstructed_image=packet.reconstructed_image,
             reference_image=ref_norm
         )
         packet.landcover_report = self.landcover_classifier.classify(packet.reconstructed_image)
+        packet.sub_cloud_report = self.sub_cloud_predictor.predict_sub_cloud_features(
+            cloud_mask=cloud_res["cloud_mask"],
+            reconstructed_image=packet.reconstructed_image,
+            sar_image=sar_norm,
+            pixel_resolution_m=meta.resolution if meta else 10.0
+        )
 
         # Export Analysis-Ready GeoTIFFs
         cloud_free_tif = os.path.join(self.output_dir, f"{image_id}_cloud_free.tif")
