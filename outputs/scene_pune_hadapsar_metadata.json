@@ -2,37 +2,37 @@
   "image_id": "scene_pune_hadapsar",
   "status": "Initialized",
   "best_candidate": "C1",
-  "cloud_percentage": 20.99,
-  "shadow_percentage": 7.59,
+  "cloud_percentage": 21.15,
+  "shadow_percentage": 7.6,
   "strategy": "adaptive",
   "quality": {
-    "psnr": 30.35,
-    "ssim": 0.897,
-    "mae": 0.0232,
-    "rmse": 0.0304,
-    "sam": 2.86,
-    "ergas": 0.72,
-    "composite_score": 0.832,
+    "psnr": 25.8,
+    "ssim": 0.896,
+    "mae": 0.0388,
+    "rmse": 0.0513,
+    "sam": 5.07,
+    "ergas": 1.23,
+    "composite_score": 0.753,
     "rating": "Good"
   },
   "confidence": {
-    "mean_confidence": 0.825,
-    "high_confidence_pct": 78.19,
-    "medium_confidence_pct": 21.16,
-    "low_confidence_pct": 0.65
+    "mean_confidence": 0.823,
+    "high_confidence_pct": 78.01,
+    "medium_confidence_pct": 20.97,
+    "low_confidence_pct": 1.02
   },
   "ndvi": {
-    "mean_ndvi": 0.306,
+    "mean_ndvi": 0.277,
     "reference_mean_ndvi": 0.332,
-    "ndvi_mae": 0.0454,
-    "vegetation_coverage_pct": 58.68
+    "ndvi_mae": 0.0582,
+    "vegetation_coverage_pct": 58.96
   },
   "landcover": {
     "vegetation": 0.0,
-    "agriculture": 61.9,
+    "agriculture": 62.4,
     "water": 3.9,
-    "urban": 3.1,
-    "bare_land": 31.1
+    "urban": 3.4,
+    "bare_land": 30.3
   },
   "elapsed_seconds": 0.0,
   "files": {

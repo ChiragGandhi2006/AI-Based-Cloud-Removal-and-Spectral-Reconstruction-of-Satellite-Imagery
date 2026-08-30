@@ -41,7 +41,7 @@ class SubCloudFeaturePredictor:
         0: ("Clear / Unobstructed Surface", [40, 50, 65], "#283241"),
         1: ("🌾 Agricultural Crops (Paddy / Wheat)", [132, 204, 22], "#84CC16"),
         2: ("🌲 Dense Tree Canopy & Forest", [16, 185, 129], "#10B981"),
-        3: ("💧 River Channels & Irrigation Canals", [59, 130, 246], "#3B82F6"),
+        3: ("💧 Water Bodies, Dams & River Channels", [59, 130, 246], "#3B82F6"),
         4: ("🏢 Urban Built-Up & IT Complexes", [249, 115, 22], "#F97316"),
         5: ("🛣️ Highway & Road Infrastructure", [234, 179, 8], "#EAB308"),
         6: ("🏜️ Bare Fallow Land & Soil", [217, 119, 6], "#D97706")
@@ -85,33 +85,42 @@ class SubCloudFeaturePredictor:
         red = reconstructed_image[:, :, 2]
         nir = reconstructed_image[:, :, 3] if reconstructed_image.shape[-1] >= 4 else reconstructed_image[:, :, 0]
 
-        # NDVI & NDWI
+        # NDVI & NDWI & Brightness
         ndvi = (nir - red) / (nir + red + 1e-5)
         ndwi = (green - nir) / (green + nir + 1e-5)
         bright = (blue + green + red) / 3.0
 
         # SAR radar backscatter intensity (surface roughness)
-        sar_intensity = sar_image[:, :, 0] if sar_image is not None else np.zeros((H, W))
+        sar_intensity = sar_image[:, :, 0] if sar_image is not None else np.full((H, W), 0.20)
 
-        # 1. Water Channels (High NDWI, very low NIR)
-        is_water = (ndwi > 0.05) & (nir < 0.12)
+        # 1. Water Bodies (Dams, Reservoirs, Lakes, River Channels & Irrigation Canals)
+        # Characteristics: High NDWI (> -0.05), low NIR (< 0.25), blue/green hue, or specular low SAR return
+        is_water = (
+            (ndwi > -0.05) & (nir < 0.25)
+        ) | (
+            (blue >= red * 0.90) & (nir < 0.20) & (bright < 0.38)
+        ) | (
+            (sar_intensity < 0.12) & (ndvi < 0.12) & (bright < 0.32)
+        ) | (
+            (bright < 0.15) & (ndvi < 0.10)
+        )
         feature_map[c_bool & is_water] = 3
 
         # 2. Roads / Highways (Elongated high brightness, low vegetation, moderate SAR)
         grad_mag = ndimage.generic_gradient_magnitude(bright, ndimage.sobel)
-        is_road = (bright > 0.22) & (bright < 0.35) & (ndvi < 0.15) & (grad_mag > 0.04)
+        is_road = (bright > 0.20) & (bright < 0.38) & (ndvi < 0.18) & (grad_mag > 0.035)
         feature_map[c_bool & is_road & ~is_water] = 5
 
         # 3. Urban Buildings (High brightness, high SAR double-bounce, low NDVI)
-        is_urban = (bright > 0.28) & (ndvi < 0.25) & ~is_road & ~is_water
+        is_urban = (bright > 0.25) & (ndvi < 0.22) & ~is_road & ~is_water
         feature_map[c_bool & is_urban] = 4
 
-        # 4. Dense Tree Canopy (Very high NDVI > 0.55)
-        is_forest = (ndvi >= 0.55) & ~is_water
+        # 4. Dense Tree Canopy (Very high NDVI > 0.45)
+        is_forest = (ndvi >= 0.45) & ~is_water
         feature_map[c_bool & is_forest] = 2
 
-        # 5. Agriculture / Crops (Moderate-High NDVI 0.25 - 0.55)
-        is_agri = (ndvi >= 0.25) & (ndvi < 0.55) & ~is_water
+        # 5. Agriculture / Crops (Moderate-High NDVI 0.20 - 0.45)
+        is_agri = (ndvi >= 0.20) & (ndvi < 0.45) & ~is_water
         feature_map[c_bool & is_agri] = 1
 
         # 6. Bare Soil (Remaining unassigned pixels)

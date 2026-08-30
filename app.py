@@ -21,7 +21,8 @@ from streamlit_folium import st_folium
 from src.preprocessing.data_loader import GeoTIFFLoader, ImageMetadata, validate_geotiff
 from src.preprocessing.preprocessor import ImagePreprocessor
 from src.preprocessing.live_map_fetcher import LiveMapSatelliteFetcher
-from src.analysis.landcover import LandCoverClassifier
+from src.analysis.ndvi import NDVIAnalyzer, NDVIReport
+from src.analysis.landcover import LandCoverClassifier, LandCoverReport
 from src.analysis.sub_cloud_predictor import SubCloudFeaturePredictor
 from src.pipeline.cloudclear_pipeline import CloudClearPipeline, PredictionPacket
 from collect_datasets import generate_custom_aoi_scene
@@ -152,9 +153,12 @@ def get_pipeline():
 
 pipeline = get_pipeline()
 
-# Load sample dataset manifest
+# Load sample dataset manifest & persistent custom scenes
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 manifest_path = os.path.join(BASE_DIR, "data", "samples", "dataset_manifest.json")
+if "custom_scenes" not in st.session_state:
+    st.session_state.custom_scenes = {}
+
 sample_scenes = {}
 if os.path.exists(manifest_path):
     with open(manifest_path, "r") as f:
@@ -162,10 +166,13 @@ if os.path.exists(manifest_path):
         for s in manifest_list:
             sample_scenes[s["region"]] = s
 
+# Persist all live fetched and custom drawn AOIs across Streamlit reruns
+sample_scenes.update(st.session_state.custom_scenes)
+
 if "current_packet" not in st.session_state:
     st.session_state.current_packet = None
 if "selected_sample" not in st.session_state:
-    st.session_state.selected_sample = list(sample_scenes.keys())[0] if sample_scenes else None
+    st.session_state.selected_sample = None
 
 
 # --- Sidebar Navigation ---
@@ -245,10 +252,7 @@ def run_prediction_for_scene(scene_dict, strategy_override=None):
     return packet
 
 
-# Auto-load initial prediction if not yet executed
-if st.session_state.current_packet is None and sample_scenes:
-    first_scene = sample_scenes[st.session_state.selected_sample]
-    run_prediction_for_scene(first_scene)
+# Scene predictions are triggered dynamically when the user selects or draws an AOI
 
 
 # =========================================================================
@@ -305,6 +309,7 @@ if nav_page == "🌐 Dashboard Overview":
             st.session_state.selected_sample = r_name
             with st.spinner("🛰️ Fetching Live Optical Satellite Feed from Map stream for Pune Hadapsar..."):
                 live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                st.session_state.custom_scenes[r_name] = live_scene
                 sample_scenes[r_name] = live_scene
                 run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
@@ -318,6 +323,7 @@ if nav_page == "🌐 Dashboard Overview":
             st.session_state.selected_sample = r_name
             with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Hinjawadi IT Hub..."):
                 live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="Sentinel-2", res=10.0)
+                st.session_state.custom_scenes[r_name] = live_scene
                 sample_scenes[r_name] = live_scene
                 run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
@@ -331,6 +337,7 @@ if nav_page == "🌐 Dashboard Overview":
             st.session_state.selected_sample = r_name
             with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Kothrud & Hills..."):
                 live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                st.session_state.custom_scenes[r_name] = live_scene
                 sample_scenes[r_name] = live_scene
                 run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
@@ -344,6 +351,7 @@ if nav_page == "🌐 Dashboard Overview":
             st.session_state.selected_sample = r_name
             with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Shivajinagar..."):
                 live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                st.session_state.custom_scenes[r_name] = live_scene
                 sample_scenes[r_name] = live_scene
                 run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
@@ -357,6 +365,7 @@ if nav_page == "🌐 Dashboard Overview":
             st.session_state.selected_sample = r_name
             with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Khadakwasla Lake..."):
                 live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="forest", sensor="Sentinel-2", res=10.0)
+                st.session_state.custom_scenes[r_name] = live_scene
                 sample_scenes[r_name] = live_scene
                 run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
@@ -431,55 +440,68 @@ if nav_page == "🌐 Dashboard Overview":
         }
     ).add_to(m)
 
-    # Add all 35 scenes to map as interactive polygons, pins, and floating place name badges
+    # Add clean clickable location markers and ONLY highlight the ACTIVE selected AOI box
     current_sel = st.session_state.selected_sample
-    for s_key, s_data in sample_scenes.items():
-        bounds = s_data["bounds"]  # [lon_min, lat_min, lon_max, lat_max]
+    
+    # 1. If an AOI is selected by the user, draw its active bounding box and floating badge
+    if current_sel and current_sel in sample_scenes:
+        active_data = sample_scenes[current_sel]
+        bounds = active_data["bounds"]
         c_lat = (bounds[1] + bounds[3]) / 2.0
         c_lon = (bounds[0] + bounds[2]) / 2.0
-        is_current = (s_key == current_sel)
 
-        is_pune = "pune" in s_data.get("image_id", "").lower() or "pune" in s_data.get("region", "").lower()
-        box_color = "#F43F5E" if is_current else ("#38BDF8" if is_pune else "#10B981")
-        fill_alpha = 0.45 if is_current else 0.15
-
-        # Bounding Box Polygon
+        # Draw Active Bounding Box
         folium.Rectangle(
             bounds=[[bounds[1], bounds[0]], [bounds[3], bounds[2]]],
-            color=box_color,
-            weight=3 if is_current else 1.5,
+            color="#F43F5E",
+            weight=3,
             fill=True,
-            fill_color=box_color,
-            fill_opacity=fill_alpha,
-            tooltip=f"{'🔴 ACTIVE: ' if is_current else ''}{s_data['region']} (Click to Select)"
+            fill_color="#F43F5E",
+            fill_opacity=0.35,
+            tooltip=f"🔴 ACTIVE AOI: {active_data['region']}"
         ).add_to(m)
 
-        # Permanent Floating Place Name Label Badge
-        clean_name = s_data['region'].replace('Maharashtra, ', '').replace('West Bengal, ', '').replace('Andhra Pradesh, ', '')
+        # Permanent Floating Active Badge
+        clean_name = active_data['region'].replace('Maharashtra, ', '').replace('West Bengal, ', '').replace('Andhra Pradesh, ', '')
         folium.Marker(
             location=[c_lat, c_lon],
             icon=DivIcon(
-                icon_size=(160, 32),
-                icon_anchor=(80, 16),
+                icon_size=(180, 32),
+                icon_anchor=(90, 16),
                 html=f"""
                 <div style="
                     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     font-size: 11px;
                     font-weight: 700;
                     color: #FFFFFF;
-                    background: {'linear-gradient(135deg, #E11D48, #BE123C)' if is_current else ('linear-gradient(135deg, #0284C7, #0369A1)' if is_pune else 'linear-gradient(135deg, #059669, #047857)')};
-                    padding: 4px 10px;
+                    background: linear-gradient(135deg, #E11D48, #BE123C);
+                    padding: 4px 12px;
                     border-radius: 14px;
-                    border: 1.5px solid {'#FDA4AF' if is_current else '#BAE6FD'};
+                    border: 1.5px solid #FDA4AF;
                     white-space: nowrap;
                     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
                     text-align: center;
                     pointer-events: none;
                 ">
-                    {'🔴 ' if is_current else '📍 '}{clean_name}
+                    🔴 ACTIVE: {clean_name}
                 </div>
                 """
             )
+        ).add_to(m)
+
+    # 2. Add clean, subtle clickable marker pins for preset regions
+    for s_key, s_data in sample_scenes.items():
+        if s_key == current_sel:
+            continue
+        bounds = s_data["bounds"]
+        c_lat = (bounds[1] + bounds[3]) / 2.0
+        c_lon = (bounds[0] + bounds[2]) / 2.0
+        is_pune = "pune" in s_data.get("image_id", "").lower() or "pune" in s_data.get("region", "").lower()
+        
+        folium.Marker(
+            location=[c_lat, c_lon],
+            tooltip=f"📍 {s_data['region']} (Click to Select & Predict)",
+            icon=folium.Icon(color="blue" if is_pune else "green", icon="info-sign", prefix="glyphicon")
         ).add_to(m)
 
     folium.LayerControl(position="topright", collapsed=False).add_to(m)
@@ -527,6 +549,7 @@ if nav_page == "🌐 Dashboard Overview":
                         sensor="LISS-IV",
                         res=5.8
                     )
+                    st.session_state.custom_scenes[custom_name] = live_custom_scene
                     sample_scenes[custom_name] = live_custom_scene
                     st.session_state.selected_sample = custom_name
                     run_prediction_for_scene(live_custom_scene, strategy_override=s_map[strat_choice])
@@ -573,35 +596,61 @@ if nav_page == "🌐 Dashboard Overview":
                         sensor=target_scene_info.get("optical_sensor", "LISS-IV"),
                         res=target_scene_info.get("resolution", 5.8)
                     )
+                    st.session_state.custom_scenes[best_scene_key] = live_scene
                     sample_scenes[best_scene_key] = live_scene
                     run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
                 st.rerun()
 
-    # Active AOI Status Banner & Trigger
-    active_s = sample_scenes.get(st.session_state.selected_sample, list(sample_scenes.values())[0])
-    act_col1, act_col2 = st.columns([3.5, 1.5])
-    with act_col1:
-        st.markdown(f"""
-        <div style="background: #111C2B; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #38BDF8; margin: 10px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="font-size: 11px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Selected Area of Interest (AOI)</span>
-                    <h3 style="margin: 2px 0 4px 0; color: #38BDF8; font-size: 17px;">📍 {active_s['region']}</h3>
-                    <div style="font-size: 12px; color: #CBD5E1;">
-                        🛰️ <b>Sensor:</b> {active_s['optical_sensor']} (<b>{active_s['resolution']}m</b>) + {active_s['sar_sensor']} | 
-                        📐 <b>Bounds:</b> <code>[{active_s['bounds'][0]:.3f}°, {active_s['bounds'][1]:.3f}°] to [{active_s['bounds'][2]:.3f}°, {active_s['bounds'][3]:.3f}°]</code> | 
-                        ☁️ <b>Cloud:</b> <code>{active_s['cloud_cover_pct']}%</code>
-                    </div>
+    # If NO AOI is selected yet, show clean interactive selection guide
+    if st.session_state.selected_sample is None or st.session_state.current_packet is None:
+        st.markdown("""
+        <div style="background: rgba(17, 28, 43, 0.85); border: 1.5px dashed #38BDF8; border-radius: 12px; padding: 32px 24px; text-align: center; margin: 20px 0;">
+            <div style="font-size: 38px; margin-bottom: 8px;">🗺️</div>
+            <h3 style="color: #38BDF8; margin: 0 0 8px 0; font-size: 19px;">Select an Area of Interest (AOI) to Begin Analysis</h3>
+            <p style="color: #94A3B8; font-size: 14px; max-width: 650px; margin: 0 auto 16px auto; line-height: 1.5;">
+                Choose an area on the live map to fetch real-world optical satellite imagery, penetrate cloud cover, and decode ground infrastructure underneath:
+            </p>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 12px;">
+                <div style="background: #111C2B; padding: 12px 18px; border-radius: 8px; border: 1px solid #1E293B; font-size: 13px; color: #CBD5E1;">
+                    ⚡ <b>1-Click Presets:</b> Click any button above (e.g. <em>Hadapsar</em>, <em>Hinjawadi</em>, <em>Kothrud</em>)
+                </div>
+                <div style="background: #111C2B; padding: 12px 18px; border-radius: 8px; border: 1px solid #1E293B; font-size: 13px; color: #CBD5E1;">
+                    👆 <b>Map Click:</b> Click any location or pin on the live map
+                </div>
+                <div style="background: #111C2B; padding: 12px 18px; border-radius: 8px; border: 1px solid #1E293B; font-size: 13px; color: #CBD5E1;">
+                    ✏️ <b>Custom AOI:</b> Use the rectangle drawing tool (top-left) to draw anywhere on Earth
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
-    with act_col2:
-        st.write("")
-        if st.button("🚀 Re-Run AI Prediction", use_container_width=True, key="btn_rerun_map_aoi"):
-            s_map = {"Auto-Adaptive": "adaptive", "Historical Dominant": "historical", "SAR Dominant": "sar"}
-            run_prediction_for_scene(active_s, strategy_override=s_map[strat_choice])
-            st.rerun()
+    else:
+        # Active AOI Status Banner & Trigger (Visible ONLY AFTER selecting AOI)
+        active_s = sample_scenes.get(st.session_state.selected_sample)
+        if active_s is None and sample_scenes:
+            active_s = list(sample_scenes.values())[0]
+        act_col1, act_col2 = st.columns([3.5, 1.5])
+        with act_col1:
+            st.markdown(f"""
+            <div style="background: #111C2B; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #38BDF8; margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 11px; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px;">Selected Area of Interest (AOI)</span>
+                        <h3 style="margin: 2px 0 4px 0; color: #38BDF8; font-size: 17px;">📍 {active_s['region']}</h3>
+                        <div style="font-size: 12px; color: #CBD5E1;">
+                            🛰️ <b>Sensor:</b> {active_s['optical_sensor']} (<b>{active_s.get('resolution', 5.8)}m</b>) + {active_s.get('sar_sensor', 'Sentinel-1 C-SAR')} | 
+                            📐 <b>Bounds:</b> <code>[{active_s['bounds'][0]:.3f}°, {active_s['bounds'][1]:.3f}°] to [{active_s['bounds'][2]:.3f}°, {active_s['bounds'][3]:.3f}°]</code> | 
+                            ☁️ <b>Cloud:</b> <code>{active_s.get('cloud_cover_pct', 20.0)}%</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        with act_col2:
+            st.write("")
+            if st.button("🚀 Re-Run AI Prediction", use_container_width=True, key="btn_rerun_map_aoi"):
+                s_map = {"Auto-Adaptive": "adaptive", "Historical Dominant": "historical", "SAR Dominant": "sar"}
+                run_prediction_for_scene(active_s, strategy_override=s_map[strat_choice])
+                st.rerun()
 
     packet = st.session_state.current_packet
 
@@ -1231,6 +1280,8 @@ elif nav_page == "☁️ Cloud & Shadow Detection":
                 st.caption("Actual Ground-Truth Clear Reference")
             else:
                 st.caption("No reference image")
+    else:
+        st.info("ℹ️ No active scene processed yet. Please go to the 🌐 Dashboard Overview or 📤 Upload / Select Data page and select an Area of Interest (AOI) to process.")
 
 
 # =========================================================================
@@ -1294,6 +1345,8 @@ elif nav_page == "🔄 Multi-Hypothesis Reconstruction":
                 st.caption(f"PSNR: {q3.psnr} dB | SSIM: {q3.ssim} | SAM: {q3.sam}° | Q-Score: {q3.composite_score}")
                 if is_best:
                     st.markdown("<span class='badge-excellent'>⭐ Selected Optimal Candidate</span>", unsafe_allow_html=True)
+    else:
+        st.info("ℹ️ No active scene processed yet. Please go to the 🌐 Dashboard Overview or 📤 Upload / Select Data page and select an Area of Interest (AOI) to process.")
 
 
 # =========================================================================
@@ -1361,6 +1414,8 @@ elif nav_page == "📊 Scientific Quality & Analytics":
             diff_col = NDVIAnalyzer.colorize_ndvi(packet.ndvi_report.diff_ndvi)
             st.image(diff_col, use_container_width=True)
             st.caption(f"NDVI MAE: {packet.ndvi_report.ndvi_mae}")
+    else:
+        st.info("ℹ️ No active scene processed yet. Please go to the 🌐 Dashboard Overview or 📤 Upload / Select Data page and select an Area of Interest (AOI) to process.")
 
 
 # =========================================================================
@@ -1401,6 +1456,8 @@ elif nav_page == "🗺️ Temporal Change Detection":
             cat_rgb[cat_map == 2] = [239, 68, 68]    # Changed (Red)
             st.image(cat_rgb, use_container_width=True)
             st.caption("Green: Stable (0-35%) | Yellow: Moderate (35-65%) | Red: Changed (>65%)")
+    else:
+        st.info("ℹ️ No active scene processed yet. Please go to the 🌐 Dashboard Overview or 📤 Upload / Select Data page and select an Area of Interest (AOI) to process.")
 
 
 # =========================================================================
@@ -1469,6 +1526,8 @@ elif nav_page == "📥 Reports & Download Center":
                     mime="application/json",
                     use_container_width=True
                 )
+    else:
+        st.info("ℹ️ No active scene processed yet. Please go to the 🌐 Dashboard Overview or 📤 Upload / Select Data page and select an Area of Interest (AOI) to process.")
 
 
 # =========================================================================

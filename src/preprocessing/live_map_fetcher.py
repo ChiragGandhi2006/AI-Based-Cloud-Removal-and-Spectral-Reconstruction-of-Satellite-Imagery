@@ -132,10 +132,23 @@ class LiveMapSatelliteFetcher:
         r = rgb_np[:, :, 0]
         g = rgb_np[:, :, 1]
         b = rgb_np[:, :, 2]
+        bright = (r + g + b) / 3.0
 
-        # Estimate NIR band (B8) based on vegetation greenness index
+        # Accurately identify water bodies (Dams, lakes, reservoirs, rivers, canals)
+        # Water exhibits blue/cyan tones with high red and NIR absorption
+        is_water_tile = (
+            ((b >= r * 0.95) & (b > 0.08) & (r < 0.35) & (bright < 0.40)) |
+            ((g >= r * 1.05) & (r < 0.20) & (bright < 0.32)) |
+            (bright < 0.15)
+        )
+
+        # Estimate NIR band (B8):
+        # Real-world water absorbs nearly 100% of Near-Infrared (NIR ~ 0.01 - 0.05)
+        # Vegetation reflects NIR strongly (NIR ~ 0.45 - 0.85)
         excess_green = np.clip(2.0 * g - r - b, -1.0, 1.0)
-        nir = np.clip(g * 1.3 + np.maximum(0, excess_green) * 0.45 + 0.05, 0.02, 0.98)
+        nir_land = np.clip(g * 1.4 + np.maximum(0, excess_green) * 0.6 + r * 0.25, 0.12, 0.95)
+        nir_water = np.clip(b * 0.18 + 0.01, 0.01, 0.06)
+        nir = np.where(is_water_tile, nir_water, nir_land).astype(np.float32)
 
         # Multi-band 4-channel image
         optical_4b = np.stack([b, g, r, nir], axis=-1).astype(np.float32)
@@ -215,8 +228,21 @@ class LiveMapSatelliteFetcher:
         nir_band = clear_optical[:, :, 3]
         ndvi = (nir_band - clear_optical[:, :, 2]) / (nir_band + clear_optical[:, :, 2] + 1e-5)
 
-        sar_vv = np.clip(brightness * 0.65 + (1.0 - ndvi) * 0.35 + np.random.randn(H, W) * 0.03, 0.05, 0.95)
-        sar_vh = np.clip(sar_vv * 0.60 + ndvi * 0.25 + np.random.randn(H, W) * 0.02, 0.02, 0.90)
+        is_water_mask = (
+            ((clear_optical[:, :, 0] >= clear_optical[:, :, 2] * 0.92) & (nir_band < 0.20) & (brightness < 0.38)) |
+            (brightness < 0.15)
+        )
+
+        sar_vv = np.where(
+            is_water_mask,
+            np.clip(np.random.rand(H, W) * 0.04 + 0.02, 0.01, 0.08),
+            np.clip(brightness * 0.65 + (1.0 - ndvi) * 0.35 + np.random.randn(H, W) * 0.03, 0.12, 0.95)
+        ).astype(np.float32)
+        sar_vh = np.where(
+            is_water_mask,
+            np.clip(np.random.rand(H, W) * 0.02 + 0.01, 0.01, 0.04),
+            np.clip(sar_vv * 0.60 + ndvi * 0.25 + np.random.randn(H, W) * 0.02, 0.04, 0.90)
+        ).astype(np.float32)
         sar_image = np.stack([sar_vv, sar_vh], axis=-1).astype(np.float32)
 
         # Metadata
