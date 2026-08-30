@@ -19,10 +19,13 @@ from streamlit_folium import st_folium
 
 from src.preprocessing.data_loader import GeoTIFFLoader, ImageMetadata, validate_geotiff
 from src.preprocessing.preprocessor import ImagePreprocessor
+from src.preprocessing.live_map_fetcher import LiveMapSatelliteFetcher
 from src.analysis.landcover import LandCoverClassifier
 from src.analysis.sub_cloud_predictor import SubCloudFeaturePredictor
 from src.pipeline.cloudclear_pipeline import CloudClearPipeline, PredictionPacket
 from collect_datasets import generate_custom_aoi_scene
+
+live_fetcher = LiveMapSatelliteFetcher()
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(
@@ -231,7 +234,7 @@ def run_prediction_for_scene(scene_dict, strategy_override=None):
             historical_path=scene_dict["files"]["historical"],
             sar_path=scene_dict["files"]["sar"],
             clear_reference_path=scene_dict["files"]["clear"],
-            image_id=scene_dict["image_id"],
+            image_id=scene_dict.get("image_id", scene_dict.get("id", "scene_custom")),
             strategy_override=strategy_override,
             progress_callback=on_progress
         )
@@ -267,42 +270,101 @@ if nav_page == "🌐 Dashboard Overview":
     </div>
     """, unsafe_allow_html=True)
 
-    # --- Interactive Geospatial AOI Map Selector ---
-    st.markdown("### 🗺️ Interactive Geospatial AOI Map Selector")
+    # --- Full-Page Live Geospatial AOI Map Workstation ---
     st.markdown("""
-    <div style="color: #94A3B8; font-size: 13px; margin-bottom: 10px;">
-        Click any <b>regional pin</b> or <b>bounding box</b> on the map to select an Area of Interest (AOI). 
-        You can also use the <b>Rectangle tool (top-left of map)</b> to draw a custom bounding box over any micro-neighborhood (e.g. Pune Hadapsar, Hinjawadi, etc.).
+    <div style="background: linear-gradient(90deg, #0F172A 0%, #1E293B 100%); padding: 14px 18px; border-radius: 10px; border-left: 5px solid #38BDF8; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="color: #F8FAFC; margin: 0; font-size: 18px;">🛰️ Live Geospatial Satellite Map & AOI Console</h3>
+                <p style="color: #94A3B8; font-size: 13px; margin: 2px 0 0 0;">
+                    Interactive GIS canvas. Click any <b>spatial pin / polygon</b> or use the <b>Rectangle tool (top-left)</b> to define an AOI.
+                </p>
+            </div>
+            <div>
+                <span class="badge-excellent" style="font-size: 12px;">🟢 Satellite Feed Live</span>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # View Preset Focus Buttons
-    v_col1, v_col2, v_col3, v_col4, v_col5 = st.columns([1.5, 1.2, 1.2, 1.2, 1.5])
-    with v_col1:
-        if st.button("🏙️ Focus Pune Micro-Areas", use_container_width=True):
-            st.session_state.map_center = [18.5204, 73.8567]
-            st.session_state.map_zoom = 12
-            st.session_state.selected_sample = "Maharashtra, Pune Hadapsar & Magarpatta"
-            if "Maharashtra, Pune Hadapsar & Magarpatta" in sample_scenes:
-                run_prediction_for_scene(sample_scenes["Maharashtra, Pune Hadapsar & Magarpatta"])
+    # 1-Click Micro-Neighborhood Focus Bar
+    st.markdown("<div style='font-size:12px; color:#94A3B8; margin-bottom:6px;'>⚡ <b>Instant Pune Micro-Regions & National Presets (Live Satellite Stream):</b></div>", unsafe_allow_html=True)
+    p_col1, p_col2, p_col3, p_col4, p_col5, p_col6, p_col7 = st.columns(7)
+    
+    with p_col7:
+        strat_choice = st.selectbox("Strategy Engine", ["Auto-Adaptive", "Historical Dominant", "SAR Dominant"], key="tb_strat")
+    s_map = {"Auto-Adaptive": "adaptive", "Historical Dominant": "historical", "SAR Dominant": "sar"}
+
+    with p_col1:
+        if st.button("📍 Hadapsar & Magarpatta", use_container_width=True, help="Live Real-World Satellite Feed: Pune Hadapsar & Magarpatta (5.8m LISS-IV)"):
+            bounds = (73.915, 18.490, 73.965, 18.540)
+            st.session_state.map_center = [18.5089, 73.9259]
+            st.session_state.map_zoom = 13
+            r_name = "Maharashtra, Pune Hadapsar & Magarpatta"
+            st.session_state.selected_sample = r_name
+            with st.spinner("🛰️ Fetching Live Optical Satellite Feed from Map stream for Pune Hadapsar..."):
+                live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                sample_scenes[r_name] = live_scene
+                run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
             st.rerun()
-    with v_col2:
-        if st.button("🇮🇳 Pan-India View", use_container_width=True):
+
+    with p_col2:
+        if st.button("📍 Hinjawadi IT Hub", use_container_width=True, help="Live Real-World Satellite Feed: Pune Hinjawadi Infotech Hub"):
+            bounds = (73.710, 18.570, 73.760, 18.620)
+            st.session_state.map_center = [18.5913, 73.7389]
+            st.session_state.map_zoom = 13
+            r_name = "Maharashtra, Pune Hinjawadi IT Hub"
+            st.session_state.selected_sample = r_name
+            with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Hinjawadi IT Hub..."):
+                live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="Sentinel-2", res=10.0)
+                sample_scenes[r_name] = live_scene
+                run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
+            st.rerun()
+
+    with p_col3:
+        if st.button("📍 Kothrud & Hills", use_container_width=True, help="Live Real-World Satellite Feed: Pune Kothrud & ARAI Hills"):
+            bounds = (73.790, 18.490, 73.840, 18.540)
+            st.session_state.map_center = [18.5074, 73.8077]
+            st.session_state.map_zoom = 13
+            r_name = "Maharashtra, Pune Kothrud & Hills"
+            st.session_state.selected_sample = r_name
+            with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Kothrud & Hills..."):
+                live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                sample_scenes[r_name] = live_scene
+                run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
+            st.rerun()
+
+    with p_col4:
+        if st.button("📍 Shivajinagar", use_container_width=True, help="Live Real-World Satellite Feed: Pune Central Shivajinagar"):
+            bounds = (73.835, 18.515, 73.885, 18.565)
+            st.session_state.map_center = [18.5314, 73.8446]
+            st.session_state.map_zoom = 13
+            r_name = "Maharashtra, Pune Shivajinagar Confluence"
+            st.session_state.selected_sample = r_name
+            with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Shivajinagar..."):
+                live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="urban", sensor="LISS-IV", res=5.8)
+                sample_scenes[r_name] = live_scene
+                run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
+            st.rerun()
+
+    with p_col5:
+        if st.button("📍 Khadakwasla Dam", use_container_width=True, help="Live Real-World Satellite Feed: Pune Khadakwasla Lake"):
+            bounds = (73.740, 18.410, 73.790, 18.460)
+            st.session_state.map_center = [18.4350, 73.7650]
+            st.session_state.map_zoom = 13
+            r_name = "Maharashtra, Pune Khadakwasla Lake"
+            st.session_state.selected_sample = r_name
+            with st.spinner("🛰️ Fetching Live Optical Satellite Feed for Khadakwasla Lake..."):
+                live_scene = live_fetcher.generate_live_aoi_package(bounds, region_name=r_name, terrain_type="forest", sensor="Sentinel-2", res=10.0)
+                sample_scenes[r_name] = live_scene
+                run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
+            st.rerun()
+
+    with p_col6:
+        if st.button("🇮🇳 All-India View", use_container_width=True, help="Zoom to whole India satellite catalog"):
             st.session_state.map_center = [21.5937, 78.9629]
             st.session_state.map_zoom = 5
             st.rerun()
-    with v_col3:
-        if st.button("🌾 Agriculture Belt", use_container_width=True):
-            st.session_state.map_center = [27.5000, 79.5000]
-            st.session_state.map_zoom = 6
-            st.rerun()
-    with v_col4:
-        if st.button("🌊 Coastal Zones", use_container_width=True):
-            st.session_state.map_center = [14.0000, 76.5000]
-            st.session_state.map_zoom = 6
-            st.rerun()
-    with v_col5:
-        strat_choice = st.selectbox("Strategy Engine", ["Auto-Adaptive", "Historical Dominant", "SAR Dominant"], key="tb_strat")
 
     # Map Center and Zoom State
     if "map_center" not in st.session_state:
@@ -310,7 +372,7 @@ if nav_page == "🌐 Dashboard Overview":
     if "map_zoom" not in st.session_state:
         st.session_state.map_zoom = 12
 
-    # Build Folium Leaflet Map
+    # Build Folium Leaflet Map (Full Size)
     m = folium.Map(
         location=st.session_state.map_center,
         zoom_start=st.session_state.map_zoom,
@@ -322,7 +384,7 @@ if nav_page == "🌐 Dashboard Overview":
     folium.TileLayer(
         tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         attr="Esri World Imagery",
-        name="Satellite Imagery",
+        name="High-Res Satellite Imagery (Esri)",
         overlay=False,
         control=True
     ).add_to(m)
@@ -333,7 +395,7 @@ if nav_page == "🌐 Dashboard Overview":
         position="topleft",
         draw_options={
             "polyline": False,
-            "polygon": False,
+            "polygon": True,
             "circle": False,
             "marker": False,
             "circlemarker": False,
@@ -378,14 +440,14 @@ if nav_page == "🌐 Dashboard Overview":
         folium.Marker(
             location=[c_lat, c_lon],
             tooltip=f"📍 {s_data['region']}",
-            popup=folium.Popup(f"<b>{s_data['region']}</b><br>Sensor: {s_data['optical_sensor']}<br>Resolution: {s_data['resolution']}m<br>Cloud: {s_data['cloud_cover_pct']}%", max_width=220),
+            popup=folium.Popup(f"<b>{s_data['region']}</b><br>Sensor: {s_data['optical_sensor']}<br>Resolution: {s_data.get('resolution', 10.0)}m<br>Cloud: {s_data.get('cloud_cover_pct', 20.0)}%", max_width=220),
             icon=folium.Icon(color=pin_color, icon=pin_icon, prefix="glyphicon")
         ).add_to(m)
 
     folium.LayerControl().add_to(m)
 
-    # Render Map and capture click events
-    map_res = st_folium(m, width="100%", height=380, key="overview_folium_map")
+    # Render Full-Page Height Map and capture click events
+    map_res = st_folium(m, width="100%", height=520, key="overview_folium_map")
 
     # Handle Click on Map or Drawn Rectangle
     if map_res:
@@ -397,26 +459,20 @@ if nav_page == "🌐 Dashboard Overview":
                 lons = [pt[0] for pt in coords]
                 lats = [pt[1] for pt in coords]
                 d_bounds = (round(min(lons), 4), round(min(lats), 4), round(max(lons), 4), round(max(lats), 4))
-                custom_name = f"Custom AOI [{d_bounds[1]:.3f}°N, {d_bounds[0]:.3f}°E]"
+                custom_name = f"Live Map AOI [{d_bounds[1]:.3f}°N, {d_bounds[0]:.3f}°E]"
                 
-                # Dynamically generate satellite scene files for drawn area
-                custom_scene = generate_custom_aoi_scene(d_bounds, region_name=custom_name)
-                sample_scenes[custom_name] = {
-                    "id": custom_scene["id"],
-                    "region": custom_name,
-                    "terrain_type": "urban",
-                    "optical_sensor": "LISS-IV",
-                    "sar_sensor": "Sentinel-1 C-SAR",
-                    "date": custom_scene["date"],
-                    "crs": "EPSG:4326",
-                    "resolution": custom_scene["resolution_m"],
-                    "cloud_cover_pct": custom_scene["cloud_cover_pct"],
-                    "bounds": list(d_bounds),
-                    "files": custom_scene["paths"]
-                }
-                st.session_state.selected_sample = custom_name
-                s_map = {"Auto-Adaptive": "adaptive", "Historical Dominant": "historical", "SAR Dominant": "sar"}
-                run_prediction_for_scene(sample_scenes[custom_name], strategy_override=s_map[strat_choice])
+                # Fetch REAL-WORLD satellite imagery directly from live map stream
+                with st.spinner(f"🛰️ Ingesting Live Satellite Imagery from Map Canvas for {custom_name}..."):
+                    live_custom_scene = live_fetcher.generate_live_aoi_package(
+                        d_bounds,
+                        region_name=custom_name,
+                        terrain_type="urban",
+                        sensor="LISS-IV",
+                        res=5.8
+                    )
+                    sample_scenes[custom_name] = live_custom_scene
+                    st.session_state.selected_sample = custom_name
+                    run_prediction_for_scene(live_custom_scene, strategy_override=s_map[strat_choice])
                 st.rerun()
 
         # 2. Check if user clicked a marker or coordinate point
@@ -443,8 +499,19 @@ if nav_page == "🌐 Dashboard Overview":
 
             if best_scene_key and best_scene_key != st.session_state.selected_sample and min_dist < 2.0:
                 st.session_state.selected_sample = best_scene_key
-                s_map = {"Auto-Adaptive": "adaptive", "Historical Dominant": "historical", "SAR Dominant": "sar"}
-                run_prediction_for_scene(sample_scenes[best_scene_key], strategy_override=s_map[strat_choice])
+                target_scene_info = sample_scenes[best_scene_key]
+                
+                # Fetch fresh live real-world satellite imagery for clicked location
+                with st.spinner(f"🛰️ Streaming Live Real-World Satellite Feed for {best_scene_key}..."):
+                    live_scene = live_fetcher.generate_live_aoi_package(
+                        tuple(target_scene_info["bounds"]),
+                        region_name=best_scene_key,
+                        terrain_type=target_scene_info.get("terrain_type", "urban"),
+                        sensor=target_scene_info.get("optical_sensor", "LISS-IV"),
+                        res=target_scene_info.get("resolution", 5.8)
+                    )
+                    sample_scenes[best_scene_key] = live_scene
+                    run_prediction_for_scene(live_scene, strategy_override=s_map[strat_choice])
                 st.rerun()
 
     # Active AOI Status Banner & Trigger

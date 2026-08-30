@@ -100,10 +100,10 @@ class MRRReconstructionModel:
         change_prob: Optional[np.ndarray] = None
     ) -> Dict[str, np.ndarray]:
         """
-        Generates 3 reconstruction candidates:
-        C1: Historical Dominant
-        C2: SAR Dominant
-        C3: Adaptive Cross-Attention Fusion
+        Generates 3 high-definition reconstruction candidates:
+        C1: Historical Dominant (Local Radiometric & Atmospheric Matched)
+        C2: SAR Dominant (High-Frequency Radar Edge & Geometric Infilling)
+        C3: Adaptive Cross-Attention Fusion (Joint Spectral-Radar-Temporal Synthesis)
         """
         H, W = cloudy_optical.shape[:2]
 
@@ -115,32 +115,47 @@ class MRRReconstructionModel:
             sar_image = np.repeat(sar_image, 2, axis=-1)
 
         mask_2d = cloud_mask.astype(np.float32)
-        smooth_mask = ndimage.gaussian_filter(mask_2d, sigma=1.2)[:, :, np.newaxis]
+        # Multi-scale smooth alpha mask
+        smooth_mask = ndimage.gaussian_filter(mask_2d, sigma=1.8)[:, :, np.newaxis]
 
-        # 1. High-fidelity spectral infill
+        # 1. High-Fidelity Local Radiometric Color & Illumination Matching
         hist_matched = hist_optical.copy()
         clear_mask = (mask_2d == 0)
         if np.sum(clear_mask) > 100:
             for b in range(4):
-                c_mean = np.mean(cloudy_optical[:, :, b][clear_mask])
-                h_mean = np.mean(hist_optical[:, :, b][clear_mask])
-                hist_matched[:, :, b] = np.clip(hist_optical[:, :, b] + (c_mean - h_mean) * 0.5, 0.0, 1.0)
+                c_vals = cloudy_optical[:, :, b][clear_mask]
+                h_vals = hist_optical[:, :, b][clear_mask]
+                c_mean, c_std = float(np.mean(c_vals)), float(np.std(c_vals)) + 1e-4
+                h_mean, h_std = float(np.mean(h_vals)), float(np.std(h_vals)) + 1e-4
+                # Standardize & match distribution
+                matched_band = (hist_optical[:, :, b] - h_mean) * (c_std / h_std) + c_mean
+                hist_matched[:, :, b] = np.clip(matched_band, 0.0, 1.0)
 
+        # 2. High-Frequency SAR Structural Feature Extraction (Roads, Buildings, Water)
+        sar_vv = sar_image[:, :, 0]
+        sar_vh = sar_image[:, :, 1]
+        # Radar edge operator
+        sar_sobel_x = ndimage.sobel(sar_vv, axis=0)
+        sar_sobel_y = ndimage.sobel(sar_vv, axis=1)
+        sar_edges = np.hypot(sar_sobel_x, sar_sobel_y)
+        sar_edges = np.clip(sar_edges / (np.percentile(sar_edges, 98) + 1e-5), 0.0, 1.0)[:, :, np.newaxis]
+
+        # Radar dielectric brightness & texture
+        sar_tex = np.mean(sar_image, axis=-1, keepdims=True)
+        sar_synthesized = np.clip(hist_matched * 0.78 + sar_tex * 0.22 + sar_edges * 0.05, 0.0, 1.0)
+
+        # 3. Candidate Infilling
         c1_phys = (1.0 - smooth_mask) * cloudy_optical + smooth_mask * hist_matched
-
-        # SAR radar backscatter texture synthesis
-        sar_intensity = np.mean(sar_image, axis=-1, keepdims=True)
-        sar_synthesized = np.clip(hist_matched * 0.85 + (sar_intensity * 0.15), 0.0, 1.0)
         c2_phys = (1.0 - smooth_mask) * cloudy_optical + smooth_mask * sar_synthesized
 
-        # Adaptive synthesis
+        # Adaptive synthesis based on detected ground change
         if change_prob is None:
             change_prob = np.zeros((H, W), dtype=np.float32)
-        ch_weight = np.clip(change_prob[:, :, np.newaxis] * 0.4, 0.0, 0.4)
+        ch_weight = np.clip(change_prob[:, :, np.newaxis] * 0.55, 0.0, 0.65)
         adaptive_infill = (1.0 - ch_weight) * hist_matched + ch_weight * sar_synthesized
         c3_phys = (1.0 - smooth_mask) * cloudy_optical + smooth_mask * adaptive_infill
 
-        # 2. Neural Feature forward pass
+        # 4. Latent Cross-Attention Residual Refinement
         c_in = tf.image.resize(cloudy_optical, (self.patch_size, self.patch_size))[np.newaxis, ...]
         h_in = tf.image.resize(hist_optical, (self.patch_size, self.patch_size))[np.newaxis, ...]
         s_in = tf.image.resize(sar_image, (self.patch_size, self.patch_size))[np.newaxis, ...]
@@ -149,17 +164,13 @@ class MRRReconstructionModel:
         out_c1_nn, out_c2_nn, out_c3_nn = self.model.predict([c_in, h_in, s_in, m_in], verbose=0)
         c3_nn_resized = tf.image.resize(out_c3_nn[0], (H, W)).numpy()
 
-        # Weighted combination ensuring high PSNR and structural consistency
-        c1_final = c1_phys
-        c2_final = c2_phys
-        # Minor high-frequency residual enhancement from cross-attention layer
-        c3_residual = (c3_nn_resized - np.mean(c3_nn_resized)) * 0.02
+        c3_residual = (c3_nn_resized - np.mean(c3_nn_resized)) * 0.03
         c3_final = np.clip(c3_phys + smooth_mask * c3_residual, 0.0, 1.0)
 
-        # Exact clear-sky preservation
-        c1_final = np.where(smooth_mask > 0.01, c1_final, cloudy_optical)
-        c2_final = np.where(smooth_mask > 0.01, c2_final, cloudy_optical)
-        c3_final = np.where(smooth_mask > 0.01, c3_final, cloudy_optical)
+        # Exact clear-sky pixel preservation with soft boundary
+        c1_final = np.where(smooth_mask > 0.02, c1_phys, cloudy_optical)
+        c2_final = np.where(smooth_mask > 0.02, c2_phys, cloudy_optical)
+        c3_final = np.where(smooth_mask > 0.02, c3_final, cloudy_optical)
 
         return {
             "C1": c1_final.astype(np.float32),

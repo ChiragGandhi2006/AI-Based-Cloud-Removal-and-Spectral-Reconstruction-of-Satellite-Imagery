@@ -381,32 +381,39 @@ def generate_custom_aoi_scene(
         resolution=res,
         sensor=sensor,
         acquisition_date="2024-05-20",
+        region=region_name,
         bounds=bounds,
-        data_type="float32",
-        cloud_coverage_percent=round(cloud_pct, 2)
+        dtype="float32"
     )
 
     cloudy_path = os.path.join(dirs["cloudy"], f"{clean_id}_cloudy.tif")
     clear_path = os.path.join(dirs["clear"], f"{clean_id}_clear.tif")
-    hist_path = os.path.join(dirs["historical"], f"{clean_id}_hist.tif")
+    hist_path = os.path.join(dirs["historical"], f"{clean_id}_historical.tif")
     sar_path = os.path.join(dirs["sar"], f"{clean_id}_sar.tif")
 
-    loader = GeoTIFFLoader()
-    loader.save_raster(cloudy_path, cloudy_optical, meta)
-    loader.save_raster(clear_path, clear_optical, meta)
-    loader.save_raster(hist_path, hist_optical, meta)
-    loader.save_raster(sar_path, sar_image, meta)
+    GeoTIFFLoader.save_raster(cloudy_path, cloudy_optical, reference_meta=meta)
+    GeoTIFFLoader.save_raster(clear_path, clear_optical, reference_meta=meta)
+    GeoTIFFLoader.save_raster(hist_path, hist_optical, reference_meta=meta)
+    GeoTIFFLoader.save_raster(sar_path, sar_image, reference_meta=meta)
 
     return {
+        "image_id": clean_id,
         "id": clean_id,
         "region": region_name,
         "terrain_type": terrain,
         "optical_sensor": sensor,
         "sar_sensor": "Sentinel-1 C-SAR",
         "date": "2024-05-20",
+        "resolution": res,
         "resolution_m": res,
         "cloud_cover_pct": round(cloud_pct, 2),
         "bounds": list(bounds),
+        "files": {
+            "cloudy": cloudy_path,
+            "clear": clear_path,
+            "historical": hist_path,
+            "sar": sar_path
+        },
         "paths": {
             "cloudy": cloudy_path,
             "clear": clear_path,
