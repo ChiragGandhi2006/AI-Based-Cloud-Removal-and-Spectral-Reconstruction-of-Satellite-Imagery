@@ -2,37 +2,37 @@
   "image_id": "scene_west_bengal_nadia",
   "status": "Initialized",
   "best_candidate": "C1",
-  "cloud_percentage": 7.9,
-  "shadow_percentage": 4.76,
-  "strategy": "historical",
+  "cloud_percentage": 51.16,
+  "shadow_percentage": 3.62,
+  "strategy": "adaptive",
   "quality": {
-    "psnr": 28.31,
-    "ssim": 0.842,
-    "mae": 0.0271,
-    "rmse": 0.0384,
-    "sam": 4.4,
-    "ergas": 1.71,
-    "composite_score": 0.747,
-    "rating": "Moderate"
+    "psnr": 36.73,
+    "ssim": 0.976,
+    "mae": 0.009,
+    "rmse": 0.0146,
+    "sam": 1.36,
+    "ergas": 0.45,
+    "composite_score": 0.935,
+    "rating": "Excellent"
   },
   "confidence": {
-    "mean_confidence": 0.883,
-    "high_confidence_pct": 91.64,
-    "medium_confidence_pct": 8.11,
-    "low_confidence_pct": 0.24
+    "mean_confidence": 0.814,
+    "high_confidence_pct": 50.74,
+    "medium_confidence_pct": 48.14,
+    "low_confidence_pct": 1.12
   },
   "ndvi": {
-    "mean_ndvi": 0.642,
+    "mean_ndvi": 0.714,
     "reference_mean_ndvi": 0.715,
-    "ndvi_mae": 0.0912,
-    "vegetation_coverage_pct": 90.81
+    "ndvi_mae": 0.0169,
+    "vegetation_coverage_pct": 93.79
   },
   "landcover": {
-    "vegetation": 81.1,
-    "agriculture": 11.3,
+    "vegetation": 93.8,
+    "agriculture": 0.0,
     "water": 6.2,
-    "urban": 1.1,
-    "bare_land": 0.3
+    "urban": 0.0,
+    "bare_land": 0.0
   },
   "elapsed_seconds": 0.0,
   "files": {

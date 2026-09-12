@@ -2,37 +2,37 @@
   "image_id": "test_nadia_01",
   "status": "Initialized",
   "best_candidate": "C1",
-  "cloud_percentage": 8.19,
-  "shadow_percentage": 4.76,
+  "cloud_percentage": 51.18,
+  "shadow_percentage": 3.68,
   "strategy": "historical",
   "quality": {
-    "psnr": 28.46,
-    "ssim": 0.844,
-    "mae": 0.0266,
-    "rmse": 0.0377,
-    "sam": 4.33,
-    "ergas": 1.69,
-    "composite_score": 0.75,
-    "rating": "Good"
+    "psnr": 36.75,
+    "ssim": 0.976,
+    "mae": 0.009,
+    "rmse": 0.0145,
+    "sam": 1.36,
+    "ergas": 0.44,
+    "composite_score": 0.936,
+    "rating": "Excellent"
   },
   "confidence": {
-    "mean_confidence": 0.882,
-    "high_confidence_pct": 91.35,
-    "medium_confidence_pct": 8.39,
-    "low_confidence_pct": 0.26
+    "mean_confidence": 0.814,
+    "high_confidence_pct": 50.62,
+    "medium_confidence_pct": 48.35,
+    "low_confidence_pct": 1.03
   },
   "ndvi": {
-    "mean_ndvi": 0.643,
+    "mean_ndvi": 0.714,
     "reference_mean_ndvi": 0.715,
-    "ndvi_mae": 0.0897,
-    "vegetation_coverage_pct": 90.98
+    "ndvi_mae": 0.0169,
+    "vegetation_coverage_pct": 93.79
   },
   "landcover": {
-    "vegetation": 81.4,
-    "agriculture": 11.2,
+    "vegetation": 93.8,
+    "agriculture": 0.0,
     "water": 6.2,
-    "urban": 0.9,
-    "bare_land": 0.3
+    "urban": 0.0,
+    "bare_land": 0.0
   },
   "elapsed_seconds": 0.0,
   "files": {

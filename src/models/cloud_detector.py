@@ -107,8 +107,8 @@ class CloudDetectionModel:
     def predict(
         self,
         image_4band: np.ndarray,
-        cloud_threshold: float = 0.5,
-        shadow_threshold: float = 0.4
+        cloud_threshold: float = 0.25,
+        shadow_threshold: float = 0.25
     ) -> Dict[str, Any]:
         """
         Detects clouds and shadows on a 4-band optical satellite image.
